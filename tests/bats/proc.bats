@@ -122,6 +122,24 @@ teardown() {
   ! svc_running dummy rezdummy
 }
 
+@test "svc_stop stops every running copy, not just one (uses the real /proc)" {
+  export REZ_PROC=/proc
+  make_dummy rezdummy
+  svc_start dummy rezdummy "" -- "$T/rezdummy" 3>&-
+  # A second copy, as a leftover second boot script would start it.
+  "$T/rezdummy" 3>&- >/dev/null 2>&1 </dev/null &
+  for _ in $(seq 1 20); do
+    [ "$(proc_find rezdummy | wc -l)" -eq 2 ] && break
+    sleep 0.25
+  done
+  [ "$(proc_find rezdummy | wc -l)" -eq 2 ]
+  run svc_stop dummy rezdummy
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"dummy stopped (2 copies)"* ]]
+  [ -z "$(proc_find rezdummy)" ]
+  ! svc_running dummy rezdummy
+}
+
 @test "supervised process is restarted after a crash" {
   export REZ_PROC=/proc
   make_dummy rezcrash

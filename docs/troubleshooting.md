@@ -98,9 +98,10 @@ To prevent it from happening again, give every client a fallback resolver, as de
 ```bash
 mkdir -p ~/.termux/boot-disabled
 mv ~/.termux/boot/<other file> ~/.termux/boot-disabled/
+rez restart <module>
 ```
 
-`rez stop` stops one copy at a time. Run `rez stop <module>` until `rez status` shows the module as stopped, then `rez start <module>`.
+`rez stop` and `rez restart` stop every running copy, so the restart leaves exactly one.
 
 Keep copies of startup scripts anywhere except `~/.termux/boot/`. The boot script also holds a lock, so a second copy of resurrect's own script exits immediately.
 

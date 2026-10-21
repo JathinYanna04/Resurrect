@@ -240,7 +240,7 @@ Read [docs/security.md](docs/security.md) for the exceptions and what is left to
 
 | Area | Status |
 |---|---|
-| Unit tests: 77 bats tests, 25 Python tests | Pass on Linux and inside the official Termux Docker image |
+| Unit tests: 78 bats tests, 25 Python tests | Pass on Linux and inside the official Termux Docker image |
 | Real install in Termux (x86_64 container), 43 behaviour checks | Pass: `base`, `ntfy`, `vaultwarden`, `adguard` (no root), `copyparty`, `filebrowser`, `syncthing`, `backup`, `monitor`, `alerts`, boot lock, stale pidfiles |
 | `tailscale`, `cloudflared`, `jellyfin`, `acc`, AdGuard root mode | **Not tested yet** (dry run only). They need a real device, an account or root |
 | Termux:Boot, phantom process killer, Doze, arm64 binaries, proot on an Android kernel | **Not tested yet**. A container can't show Android behaviour |

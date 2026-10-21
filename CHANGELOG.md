@@ -6,6 +6,7 @@ All notable changes to resurrect are recorded here. The format is based on [Keep
 
 ### Fixed
 
+- `rez stop`, `rez restart` and `rez uninstall` now stop every running copy of a service. Previously they stopped one, so a duplicate started by a second boot script survived and blocked the next start.
 - `vaultwarden`: install `argon2`, so the `/admin` token is stored as an argon2id hash on real devices. Previously only the test image had `argon2`, and a real install stored the token in plain text with a warning.
 - `alerts`: `rez alerts run JOB --dry-run` now passes `--dry-run` to the job. The global option parser consumed it, so a test run called the LLM, sent alerts and marked items as seen.
 - `rez help` showed `alerts list|run_cmd JOB`; it now shows `run JOB` and `set-key`. Two other messages had the same leftover.

@@ -35,7 +35,7 @@ git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core /tmp
 |---|---|---|---|
 | shellcheck | All shell scripts | Any Linux, through Docker | No shell mistakes that shellcheck can detect |
 | Privacy scan | All files and commit history | Any Linux | No personal data, addresses or tokens in the repository |
-| `tests/bats/` | 77 tests | Linux, and inside Termux | Process matching, pidfile rules, locking, config parsing, device detection with a fake `getprop` and `/proc`, the module contract, profiles, eligibility, checksums, the boot script, the cron block, CLI and dry-run setup for every profile, the backup pull script |
+| `tests/bats/` | 78 tests | Linux, and inside Termux | Process matching, pidfile rules, locking, config parsing, device detection with a fake `getprop` and `/proc`, the module contract, profiles, eligibility, checksums, the boot script, the cron block, CLI and dry-run setup for every profile, the backup pull script |
 | `tests/python/` | 25 tests | Python 3.11+, and inside Termux | Smart alerts against a mock LLM and ntfy server, the DNS probe against a fake DNS server, the privacy scanner |
 | `tests/termux-docker/integration.sh` | 43 checks | The official Termux image (x86_64) | A real non-interactive install and the behaviour listed below |
 
@@ -59,7 +59,7 @@ docker run --rm -v "$PWD:/mnt:ro" -w /mnt koalaman/shellcheck:v0.10.0 -x \
   extras/laptop/*.sh extras/laptop/dns-fallback/*.sh tests/termux-docker/*.sh tests/mocks/getprop
 ```
 
-When everything passes, bats ends with `ok 77 ...` and no `not ok` lines, and the Python run ends with:
+When everything passes, bats ends with `ok 78 ...` and no `not ok` lines, and the Python run ends with:
 
 ```text
 Ran 25 tests in 1.393s

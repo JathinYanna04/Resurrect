@@ -143,30 +143,35 @@ svc_start() {
   return 1
 }
 
-# svc_stop NAME EXE [ARGS_REGEX]: stop the service (and its supervisor loop).
+# svc_stop NAME EXE [ARGS_REGEX]: stop every running copy of the service,
+# and its supervisor loop. Copies pile up when a second startup path ran
+# (a leftover boot script); stopping only one would leave the other
+# answering "already running" to the next start.
 svc_stop() {
-  local name=$1 exe=$2 args=${3:-} pid loop i
+  local name=$1 exe=$2 args=${3:-} loop i p pids=() alive=()
   touch "$REZ_RUN_DIR/$name.stop" 2>/dev/null || true
   for loop in $(proc_find supervise.sh "supervise\.sh $name( |$)"); do
     run_cmd kill "$loop" 2>/dev/null || true
   done
-  if ! pid=$(svc_pid "$name" "$exe" "$args"); then
+  mapfile -t pids < <(proc_find "$exe" "$args")
+  rm -f "$(_svc_pidfile "$name")"
+  if ((${#pids[@]} == 0)); then
     ok "$name not running"
-    rm -f "$(_svc_pidfile "$name")"
     return 0
   fi
-  run_cmd kill "$pid" 2>/dev/null || true
+  run_cmd kill "${pids[@]}" 2>/dev/null || true
   [[ "$REZ_DRY_RUN" == 1 ]] && return 0
-  for i in $(seq 1 15); do
-    proc_matches "$pid" "$exe" "$args" || break
-    sleep 1
+  for i in $(seq 1 16); do
+    alive=()
+    for p in "${pids[@]}"; do proc_matches "$p" "$exe" "$args" && alive+=("$p"); done
+    ((${#alive[@]})) || break
+    ((i < 16)) && sleep 1
   done
-  if proc_matches "$pid" "$exe" "$args"; then
+  if ((${#alive[@]})); then
     warn "$name ignored SIGTERM, sending SIGKILL"
-    kill -9 "$pid" 2>/dev/null || true
+    kill -9 "${alive[@]}" 2>/dev/null || true
   fi
-  rm -f "$(_svc_pidfile "$name")"
-  ok "$name stopped"
+  if ((${#pids[@]} > 1)); then ok "$name stopped (${#pids[@]} copies)"; else ok "$name stopped"; fi
 }
 
 # svc_status_line NAME EXE [ARGS_REGEX] [EXTRA]: one line for `rez status`.
