@@ -1,0 +1,12 @@
+# Daily, after the phone's 03:30 backup. Persistent: a missed run (laptop
+# off) happens at the next start.
+[Unit]
+Description=Daily pull of resurrect backups from %i
+
+[Timer]
+OnCalendar=*-*-* 09:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

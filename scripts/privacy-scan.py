@@ -37,7 +37,8 @@ ALLOW_MARK = "privacy-scan: allow"
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 EMAIL_OK = re.compile(
     r"@(example\.(com|org|net)|[a-z0-9.-]*\.invalid|users\.noreply\.github\.com|anthropic\.com)$"
-    r"|^git@github\.com$|^noreply@",
+    r"|^git@github\.com$|^noreply@"
+    r"|\.(service|timer|socket|target|path|mount)$",  # systemd units: name@instance.timer
     re.I,
 )
 IPV4 = re.compile(r"(?<![\w.])(\d{1,3}(?:\.\d{1,3}){3})(?![\w.])")

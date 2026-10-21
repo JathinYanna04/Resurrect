@@ -82,6 +82,10 @@ class PrivacyScanTest(unittest.TestCase):
         rc, _ = self.scan("listen 127.0.0.1:2586, docs use 192.0.2.10 and user@example.com\n")
         self.assertEqual(rc, 0)
 
+    def test_systemd_template_units_are_not_emails(self):
+        rc, _ = self.scan("systemctl --user enable --now resurrect-pull-backups@phone.timer\n")
+        self.assertEqual(rc, 0)
+
     def test_generic_patterns_fail(self):
         for bad in ("mail me at someone@gmail.com", "server 100.101.102.103",  # privacy-scan: allow
                     "host phone.tail1a2b3c.ts.net", "cd /home/alice/projects",  # privacy-scan: allow

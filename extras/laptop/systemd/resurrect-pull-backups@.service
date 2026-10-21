@@ -1,0 +1,12 @@
+# Pull resurrect backups from the phone named after the @ (an ssh alias).
+# Install: see extras/laptop/README.md
+[Unit]
+Description=Pull resurrect backups from %i
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/resurrect-pull-backups %i
+Nice=10
+IOSchedulingClass=idle
