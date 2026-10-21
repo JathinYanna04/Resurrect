@@ -102,3 +102,15 @@ setup() {
   MOCK_ro_build_version_sdk=33 MOCK_ro_build_version_release=13 run rez doctor
   [[ "$output" == *"max_phantom_processes"* ]]
 }
+
+@test "rez alerts run JOB --dry-run passes --dry-run to the job" {
+  # bin/rez parses --dry-run as a global option; the job must still get it,
+  # or a "test" run calls the LLM, sends alerts and marks items as seen.
+  mkdir -p "$REZ_CONFIG_DIR/alerts" "$T/bin"
+  touch "$REZ_CONFIG_DIR/alerts/demo.toml"
+  printf '#!/bin/sh\necho "python3 $*"\n' >"$T/bin/python3"
+  chmod +x "$T/bin/python3"
+  PATH=$T/bin:$PATH run rez alerts run demo --dry-run
+  [ "$status" -eq 0 ] || { echo "$output"; false; }
+  [[ "$output" == *"demo.toml --dry-run"* ]]
+}

@@ -6,7 +6,7 @@
 #
 # ACC is a Magisk module. rez downloads the pinned, checksum-verified zip
 # and, only after you confirm, asks Magisk to install it. It never reboots
-# for you: reboot yourself when convenient, then run_cmd `rez acc apply`.
+# for you: reboot yourself when convenient, then run `rez acc apply`.
 
 MOD_NAME=acc
 MOD_DESC="ACC battery charge limit (stop at 80 %, resume at 70 %)"

@@ -35,7 +35,7 @@ Device
 
 Data
   backup run|list|verify [FILE]|extract FILE DIR
-  alerts list|run_cmd JOB|test JOB|sync
+  alerts list|run JOB|test JOB|sync|set-key
 
 Modules
   modules                 list modules and whether they fit this device

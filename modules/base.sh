@@ -120,7 +120,7 @@ mod_doctor() {
   if [[ -f "$f" ]] && grep -qE '^PasswordAuthentication no' "$f"; then
     printf '  %sPASS%s ssh password login disabled\n' "$_c_grn" "$_c_off"
   elif [[ -f "$f" ]]; then
-    printf '  %sFAIL%s ssh password login is enabled (run_cmd rez install base)\n' "$_c_red" "$_c_off"
+    printf '  %sFAIL%s ssh password login is enabled (run: rez install base)\n' "$_c_red" "$_c_off"
   fi
 }
 

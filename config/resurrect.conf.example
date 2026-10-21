@@ -1,52 +1,78 @@
 # resurrect answers file, for non-interactive installs:
-#   rez setup --config my.conf --yes
+#   rez --yes setup --config my.conf
+#
 # Every key is optional; anything left out uses the default shown.
-# Secrets are never put here: point *_file keys at files that hold them.
+# Secrets never go in this file: point the *_file keys at files that hold
+# them (each is read once and stored in ~/.config/resurrect/secrets/).
 # The file is parsed, not executed, so shell syntax does nothing.
+#
+# Comments must be on their own line. "key=value  # note" would make
+# "value  # note" the value. Uncomment a line by removing the leading "# ".
 
 # --- Setup ------------------------------------------------------------------
-# profile=standard                 # lite | standard | full
+# lite | standard | full
+# profile=standard
+# Exactly these modules (dependencies are added). Overrides the profile.
 # setup.modules=base,tailscale,ntfy,vaultwarden,backup,monitor
-# setup.root=no                    # ask | yes | no
+# ask | yes | no
+# setup.root=no
 
-# --- Network ------------------------------------------------------------------
-# net.bind=auto                    # auto | 127.0.0.1 | 0.0.0.0
+# --- Network ----------------------------------------------------------------
+# auto: 127.0.0.1 with built-in Tailscale, 0.0.0.0 otherwise
+# net.bind=auto
 
 # --- base -------------------------------------------------------------------
-# base.ssh_pubkey_file=~/id_ed25519.pub   # copy your PUBLIC key to the phone first
-# base.move_boot_files=yes         # move other ~/.termux/boot files aside
+# Your computer's PUBLIC key; copy the .pub file to the device first.
+# base.ssh_pubkey_file=~/id_ed25519.pub
+# Move other files in ~/.termux/boot/ to ~/.termux/boot-disabled/
+# base.move_boot_files=yes
 
 # --- tailscale --------------------------------------------------------------
-# tailscale.mode=proot             # proot | app
+# proot (built in) | app (the Android app)
+# tailscale.mode=proot
 # tailscale.hostname=resurrect
-# tailscale.authkey_file=~/tskey.txt  # one-time auth key; the file is read once
+# One-time auth key, read once and deleted after login.
+# tailscale.authkey_file=~/tskey.txt
+
+# --- cloudflared ------------------------------------------------------------
+# Tunnel token from the Cloudflare Zero Trust dashboard.
+# cloudflared.token_file=~/cloudflared-token.txt
 
 # --- ntfy -------------------------------------------------------------------
-# ntfy.mode=local                  # local | external
+# local (server on this device) | external (an existing server)
+# ntfy.mode=local
 # ntfy.topic=alerts
 # ntfy.port=2586
-# ntfy.external_url=https://ntfy.sh   # for ntfy.mode=external
+# Server URL for ntfy.mode=external
+# ntfy.external_url=https://ntfy.sh
 
 # --- vaultwarden ------------------------------------------------------------
-# vaultwarden.https=tailscale      # tailscale | selfsigned
+# tailscale (certificate from Tailscale) | selfsigned
+# vaultwarden.https=tailscale
 # vaultwarden.port=8222
 
 # --- adguard ----------------------------------------------------------------
-# adguard.mode=noroot              # noroot | root (port 53, needs root)
-# adguard.dns_port=5335            # noroot mode
+# noroot | root (DNS on port 53, needs root)
+# adguard.mode=noroot
+# DNS port in noroot mode
+# adguard.dns_port=5335
 # adguard.ui_port=3000
 
-# --- copyparty / filebrowser / syncthing --------------------------------------
+# --- copyparty / filebrowser / syncthing ------------------------------------
 # copyparty.path=~/share
+# copyparty.port=3923
 # filebrowser.path=~/share
+# filebrowser.port=8085
 # syncthing.gui_port=8384
 
 # --- backup -----------------------------------------------------------------
 # backup.keep=7
 # backup.dir=~/resurrect-backups
-# backup.expect_pull=yes           # alert if no computer pulled a copy for 3 days
+# Alert if no computer pulled a copy for 3 days (extras/laptop/pull-backups.sh)
+# backup.expect_pull=yes
 
 # --- monitor ----------------------------------------------------------------
+# Seconds between checks
 # monitor.interval=60
 # monitor.autorestart=yes
 # monitor.disk_max_pct=90
@@ -54,13 +80,21 @@
 # monitor.battery_max_c=45
 
 # --- alerts -----------------------------------------------------------------
+# API key for your OpenAI-compatible LLM endpoint.
 # alerts.api_key_file=~/llm-key.txt
 
 # --- jellyfin ---------------------------------------------------------------
+# Media folder; removable storage appears as /storage/XXXX-XXXX
 # media.path=/storage/XXXX-XXXX/Movies
 # jellyfin.autostart=no
 # jellyfin.heap_mb=300
 
-# --- acc (root) ---------------------------------------------------------------
+# --- acc (root) -------------------------------------------------------------
+# Stop charging at (%)
 # acc.pause=80
+# Resume charging below (%)
 # acc.resume=70
+
+# --- Any module -------------------------------------------------------------
+# MODULE.autostart=no keeps a module installed but stopped at boot.
+# syncthing.autostart=no

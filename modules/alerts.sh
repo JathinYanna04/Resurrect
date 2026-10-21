@@ -81,7 +81,11 @@ mod_cli() {
   local cmd=${1:-}; (($#)) && shift
   case "$cmd" in
     list) _py list "$AL_JOBS" ;;
-    run) local j; j=$(_job "${1:-}"); shift; _py run "$j" "$@" ;;
+    run)
+      local j; j=$(_job "${1:-}"); shift
+      # bin/rez consumes --dry-run as a global option; hand it back to the job.
+      [[ "$REZ_DRY_RUN" == 1 ]] && set -- "$@" --dry-run
+      _py run "$j" "$@" ;;
     test) _py test "$(_job "${1:-}")" ;;
     sync) base_sync_boot_and_cron; ok "cron updated from enabled jobs" ;;
     set-key) secret_set alerts_api_key "$(ui_password "Smart alerts" "API key")"; ok "key saved" ;;

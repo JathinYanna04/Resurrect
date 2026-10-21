@@ -45,6 +45,8 @@ mod_configure() {
 
 mod_install() {
   local arch digest
+  # argon2 hashes the admin token; without it the token is stored in plain text.
+  is_termux && run_cmd pkg install -y argon2
   arch=$(go_arch)
   digest=${PIN_VAULTWARDEN_SHA256[$arch]:-}
   [[ -n "$digest" ]] || die "Vaultwarden has no build for $(uname -m)"

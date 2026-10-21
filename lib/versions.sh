@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # Pinned upstream versions and checksums. Every download is verified against
 # these values; a mismatch aborts the install. Bump a version only together
-# with its checksums (scripts/update-pins.sh prints fresh ones).
+# with its checksums.
 #
 # Keys: <tool>_<goarch>, goarch = arm64 | armv7 | amd64 | 386.
 # shellcheck disable=SC2034  # read indirectly through pin_sha256
