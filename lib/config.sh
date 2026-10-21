@@ -10,6 +10,20 @@ _REZ_CONFIG_LOADED=1
 
 : "${REZ_CONFIG_FILE:=$REZ_CONFIG_DIR/resurrect.conf}"
 
+# cfg_sandbox: in dry-run mode, point REZ_CONFIG_FILE at a scratch copy so
+# answers given during the run are visible to later steps while the real
+# file stays untouched.
+cfg_sandbox() {
+  [[ "$REZ_DRY_RUN" == 1 ]] || return 0
+  local tmp
+  tmp=$(mktemp "${TMPDIR:-/tmp}/rez-dry-conf.XXXXXX")
+  [[ -r "$REZ_CONFIG_FILE" ]] && cat "$REZ_CONFIG_FILE" >"$tmp"
+  REZ_CONFIG_FILE=$tmp
+  export REZ_CONFIG_FILE
+  # shellcheck disable=SC2064
+  trap "rm -f '$tmp'" EXIT
+}
+
 _cfg_valid_key() { [[ "$1" =~ ^[a-z0-9_.-]+$ ]]; }
 
 # cfg_get KEY [DEFAULT]: value of KEY from $REZ_CONFIG_FILE (last one wins).
@@ -35,7 +49,7 @@ cfg_set() {
   local key=$1 val=$2
   _cfg_valid_key "$key" || die "invalid config key: $key"
   [[ "$val" == *$'\n'* ]] && die "config values cannot contain newlines ($key)"
-  [[ "$REZ_DRY_RUN" == 1 ]] && { printf '[dry-run] set %s=%s\n' "$key" "$val" >&2; return 0; }
+  [[ "$REZ_DRY_RUN" == 1 ]] && printf '[dry-run] set %s=%s\n' "$key" "$val" >&2
   mkdir -p "$(dirname "$REZ_CONFIG_FILE")"
   touch "$REZ_CONFIG_FILE"
   awk -v k="$key" -v v="$val" '
@@ -46,14 +60,14 @@ cfg_set() {
         if (kk == k) { if (!done) print k "=" v; done = 1; next }
       }
       print }
-    END { if (!done) print k "=" v }' "$REZ_CONFIG_FILE" | atomic_write "$REZ_CONFIG_FILE" 600
+    END { if (!done) print k "=" v }' "$REZ_CONFIG_FILE" | REZ_DRY_RUN=0 atomic_write "$REZ_CONFIG_FILE" 600
 }
 
 cfg_unset() {
   local key=$1
   [[ -r "$REZ_CONFIG_FILE" ]] || return 0
   awk -v k="$key" '{ i = index($0, "="); kk = substr($0, 1, i - 1); gsub(/^[[:space:]]+|[[:space:]]+$/, "", kk)
-    if (i > 0 && kk == k && $0 !~ /^[[:space:]]*#/) next; print }' "$REZ_CONFIG_FILE" | atomic_write "$REZ_CONFIG_FILE" 600
+    if (i > 0 && kk == k && $0 !~ /^[[:space:]]*#/) next; print }' "$REZ_CONFIG_FILE" | REZ_DRY_RUN=0 atomic_write "$REZ_CONFIG_FILE" 600
 }
 
 # cfg_import FILE: merge every key=value from FILE (used by --config).

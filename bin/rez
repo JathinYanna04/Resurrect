@@ -67,6 +67,8 @@ done
 set -- "${REZ_ARGS[@]+"${REZ_ARGS[@]}"}"
 export REZ_DRY_RUN REZ_ASSUME_YES REZ_NONINTERACTIVE REZ_DEBUG
 
+cfg_sandbox
+
 trap 'err "failed at ${BASH_SOURCE[0]##*/}:$LINENO: $BASH_COMMAND"' ERR
 
 # REZ_HAS_ROOT is remembered from setup so later commands never re-prompt.
@@ -117,9 +119,18 @@ cmd_install() {
   (($#)) || die "usage: rez install <module>..."
   rez_init_dirs
   detect_all
+  local todo=()
   list=$(modules_sorted "$(IFS=,; echo "$*")")
   for m in $list; do
     csv_has "$(cfg_get modules "")" "$m" && [[ " $* " != *" $m "* ]] && continue
+    todo+=("$m")
+  done
+  REZ_SETUP_MODULES=$(IFS=,; echo "${todo[*]}")
+  export REZ_SETUP_MODULES
+  for m in "${todo[@]}"; do
+    module_call "$m" configure || die "$m: configuration failed"
+  done
+  for m in "${todo[@]}"; do
     setup_install_one "$m"
   done
   base_sync_boot_and_cron

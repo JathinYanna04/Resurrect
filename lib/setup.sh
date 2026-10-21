@@ -104,7 +104,10 @@ Root is optional. It only unlocks AdGuard Home on port 53 and the ACC charge lim
   ((${#list[@]})) || die "nothing to install"
   csv_has "$(IFS=,; echo "${list[*]}")" base || die "the base module is required"
 
-  # 5. Per-module questions (answers are stored in the config file)
+  # 5. Per-module questions (answers are stored in the config file).
+  # Modules can see what else is being installed through REZ_SETUP_MODULES.
+  REZ_SETUP_MODULES=$(IFS=,; echo "${list[*]}")
+  export REZ_SETUP_MODULES
   for m in "${list[@]}"; do
     module_call "$m" configure || die "$m: configuration failed"
   done

@@ -30,7 +30,7 @@ mod_configure() {
   local https
   https=$(cfg_get vaultwarden.https "")
   if [[ -z "$https" ]]; then
-    if [[ "$(cfg_get tailscale.mode "")" == proot ]] && csv_has "$(cfg_get setup.modules "$(cfg_get modules "")"),tailscale" tailscale; then
+    if [[ "$(cfg_get tailscale.mode "")" == proot ]] && csv_has "${REZ_SETUP_MODULES:-},$(cfg_get modules "")" tailscale; then
       https=tailscale
     else
       https=selfsigned

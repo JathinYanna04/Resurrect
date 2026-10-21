@@ -20,6 +20,11 @@ Usage:
 
 A line containing "privacy-scan: allow" is exempt from the generic patterns
 (never from the denylist).
+
+Allowlist: $REZ_ALLOWLIST or ~/.config/resurrect-dev/allowlist, also outside
+the repository. One exact string per line (case-insensitive) that is removed
+before any check, e.g. your own GitHub noreply commit address, which would
+otherwise match your denylisted name.
 """
 import ipaddress
 import os
@@ -75,6 +80,29 @@ def looks_secret(tok):
             and not re.fullmatch(r"[0-9./-]+", tok))
 
 
+def load_allowlist():
+    path = os.environ.get("REZ_ALLOWLIST") or os.path.expanduser("~/.config/resurrect-dev/allowlist")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return [ln.strip().lower() for ln in fh if ln.strip() and not ln.lstrip().startswith("#")]
+    except OSError:
+        return []
+
+
+ALLOW = load_allowlist()
+
+
+def strip_allowed(line):
+    if not ALLOW:
+        return line
+    low = line.lower()
+    for a in ALLOW:
+        while a in low:
+            i = low.index(a)
+            line, low = line[:i] + line[i + len(a):], low[:i] + low[i + len(a):]
+    return line
+
+
 def load_denylist():
     path = os.environ.get("REZ_DENYLIST") or os.path.expanduser("~/.config/resurrect-dev/denylist")
     entries = []
@@ -105,6 +133,7 @@ def git(*args):
 
 def scan_text(name, text, deny, findings):
     for n, line in enumerate(text.splitlines(), 1):
+        line = strip_allowed(line)
         low = line.lower()
         for i, d in enumerate(deny, 1):
             if d in low:

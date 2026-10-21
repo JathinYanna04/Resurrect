@@ -122,7 +122,7 @@ atomic_write() {
 
 # mem_kb FIELD: a /proc/meminfo field in kB (MemTotal, MemAvailable, ...).
 mem_kb() {
-  awk -v k="$1:" '$1 == k { print $2; exit }' "$REZ_PROC/meminfo" 2>/dev/null
+  awk -v k="$1:" '$1 == k { print $2; exit }' "$REZ_PROC/meminfo" 2>/dev/null || true
 }
 
 # mem_available_mb: what can be used without swapping. Never use `free`:
@@ -142,7 +142,7 @@ mem_total_mb() {
 
 # free_mb DIR: free space on the filesystem holding DIR.
 free_mb() {
-  df -Pk "$1" 2>/dev/null | awk 'NR == 2 { print int($4 / 1024) }'
+  df -Pk "$1" 2>/dev/null | awk 'NR == 2 { print int($4 / 1024) }' || true
 }
 
 # port_open HOST PORT: TCP connect test, 3 s timeout.
