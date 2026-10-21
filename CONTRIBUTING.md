@@ -18,7 +18,7 @@ Thanks for helping. The most useful contributions, in order:
 ## Development setup
 
 ```sh
-git clone https://github.com/OWNER/resurrect && cd resurrect
+git clone https://github.com/JathinYanna04/resurrect && cd resurrect
 git config core.hooksPath scripts/hooks      # privacy scan on commit and push
 ```
 

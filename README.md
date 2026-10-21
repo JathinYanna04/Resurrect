@@ -28,7 +28,7 @@ A free [Tailscale](https://tailscale.com) account is needed for remote access (t
 On the phone, in Termux:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/OWNER/resurrect/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/JathinYanna04/resurrect/main/install.sh | bash
 ```
 
 That checks you're in Termux, updates packages, downloads resurrect to `~/.resurrect` and starts `rez setup`, which asks before installing anything.
@@ -37,7 +37,7 @@ That checks you're in Termux, updates packages, downloads resurrect to `~/.resur
 
 ```sh
 pkg install -y git
-git clone https://github.com/OWNER/resurrect ~/.resurrect
+git clone https://github.com/JathinYanna04/resurrect ~/.resurrect
 less ~/.resurrect/install.sh
 ~/.resurrect/install.sh
 ```
