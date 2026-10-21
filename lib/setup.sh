@@ -138,7 +138,7 @@ setup_warnings() {
   local w=''
   [[ "$DEV_TERMUX_SOURCE" == GOOGLE_PLAY_STORE ]] && w+="* Termux from Google Play is outdated and breaks package installs. Install Termux from F-Droid or GitHub instead.
 "
-  [[ "$DEV_PHANTOM" == active || "$DEV_PHANTOM" == unknown ]] && w+="* Android $DEV_ANDROID can kill background processes (\"phantom process killer\"). Servers will die at random until you turn it off: see rez doctor or docs/troubleshooting.
+  [[ "$DEV_PHANTOM" == active || "$DEV_PHANTOM" == unknown ]] && w+="* Android $DEV_ANDROID can kill background processes (\"phantom process killer\"). Servers will die at random until you turn it off: see rez doctor or docs/troubleshooting.md.
 "
   [[ "$DEV_TERMUX_BOOT" == no ]] && w+="* Termux:Boot is not installed. Without it nothing starts after a reboot. Install it from the same place you got Termux, then open it once.
 "
