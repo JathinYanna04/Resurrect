@@ -1,0 +1,33 @@
+name: Device report
+description: Tell others how resurrect runs on your phone or tablet
+labels: [device-report]
+body:
+  - type: textarea
+    id: device
+    attributes:
+      label: Device report
+      description: Output of `rez device --report`.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: How well does it work?
+      options:
+        - Everything I installed works
+        - Works with workarounds (describe below)
+        - Partly broken (describe below)
+        - Does not work
+    validations:
+      required: true
+  - type: input
+    id: modules
+    attributes:
+      label: Modules installed
+      placeholder: base, tailscale, ntfy, vaultwarden, backup, monitor
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: RAM use after a day (`rez status`), battery/thermal behaviour, vendor settings you had to change, workarounds.

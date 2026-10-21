@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: shellcheck + privacy scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: shellcheck
+        run: |
+          docker run --rm -v "$PWD:/mnt:ro" -w /mnt koalaman/shellcheck:v0.10.0 -x \
+            bin/rez lib/*.sh modules/*.sh install.sh boot/resurrect-boot.sh scripts/hooks/* \
+            extras/laptop/*.sh extras/laptop/dns-fallback/*.sh tests/termux-docker/*.sh tests/mocks/getprop
+      - name: privacy scan (files and commit history)
+        run: |
+          python3 scripts/privacy-scan.py
+          python3 scripts/privacy-scan.py --commits
+
+  unit:
+    name: unit tests (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bats
+        run: |
+          git -c advice.detachedHead=false clone -q --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+      - name: bats
+        run: BATS_TEST_TIMEOUT=90 bats tests/bats
+      - name: python
+        run: python3 -m unittest discover -s tests/python -v
+
+  termux:
+    name: tests + real install in Termux (termux-docker, x86_64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit tests and integration install
+        run: tests/termux-docker/run.sh --install

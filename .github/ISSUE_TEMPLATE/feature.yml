@@ -1,0 +1,15 @@
+name: Feature or module request
+description: Suggest an improvement or a new module
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why, and for which devices?
+      description: For a new module, include expected RAM use and whether it runs natively in Termux, in proot, or needs root.
