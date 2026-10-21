@@ -35,7 +35,7 @@ fetch_verified() {
     debug "cached: $dest"
     return 0
   fi
-  [[ "$REZ_DRY_RUN" == 1 ]] && { run curl -fL "$url" -o "$dest"; return 0; }
+  [[ "$REZ_DRY_RUN" == 1 ]] && { run_cmd curl -fL "$url" -o "$dest"; return 0; }
   mkdir -p "$(dirname "$dest")"
   info "downloading $url"
   curl -fL --retry 3 --connect-timeout 20 -o "$dest.part" "$url" || die "download failed: $url"

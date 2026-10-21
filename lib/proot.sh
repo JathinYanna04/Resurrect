@@ -27,10 +27,10 @@ proot_install() {
     ok "proot Debian already installed"
     return 0
   fi
-  run pkg install -y proot-distro
+  run_cmd pkg install -y proot-distro
   info "installing Debian with proot-distro (~150 MB download)"
-  run proot-distro install "$REZ_PROOT_DISTRO"
-  run proot_exec sh -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl'
+  run_cmd proot-distro install "$REZ_PROOT_DISTRO"
+  run_cmd proot_exec sh -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl'
 }
 
 # proot_exec CMD...: run CMD inside Debian. The process tree is
@@ -41,12 +41,12 @@ proot_exec() {
 
 # proot_apt PKG...: install Debian packages inside the rootfs.
 proot_apt() {
-  run proot_exec env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
+  run_cmd proot_exec env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
 }
 
 # proot_put SRC DEST_IN_ROOTFS [MODE]: copy a file into the rootfs.
 proot_put() {
   local src=$1 dest=$2 mode=${3:-644} root
   root=$(proot_rootfs) || die "proot Debian is not installed"
-  run install -D -m "$mode" "$src" "$root$dest"
+  run_cmd install -D -m "$mode" "$src" "$root$dest"
 }

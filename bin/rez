@@ -35,7 +35,7 @@ Device
 
 Data
   backup run|list|verify [FILE]|extract FILE DIR
-  alerts list|run JOB|test JOB|sync
+  alerts list|run_cmd JOB|test JOB|sync
 
 Modules
   modules                 list modules and whether they fit this device
@@ -189,7 +189,7 @@ cmd_boot() {
 
 _boot_body() {
   date +%s >"$REZ_STATE_DIR/boot-time"
-  if have termux-wake-lock; then termux-wake-lock || true; fi
+  if have termux-wake-lock; then timeout 10 termux-wake-lock || true; fi
   detect_termux
   if [[ -n "$DEV_BOOT_EXTRA" ]]; then
     echo "boot: other files in $REZ_BOOT_DIR also run at boot: $DEV_BOOT_EXTRA"

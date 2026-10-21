@@ -1,5 +1,6 @@
 # shellcheck shell=bash
-# copyparty: file sharing in the browser, WebDAV, uploads. Pure Python.
+# copyparty: file sharing in the browser, WebDAV, uploads. Pure Python, run
+# from its official single-file build (pinned, checksum-verified).
 
 MOD_NAME=copyparty
 MOD_DESC="copyparty file sharing (web, WebDAV, uploads)"
@@ -7,7 +8,7 @@ MOD_DEPENDS="base"
 MOD_PORTS="3923"
 MOD_RAM_EST_MB=40
 MOD_DISK_EST_MB=10
-MOD_TESTED="termux-docker (amd64): pip install with hashes, start, login. Real device: no"
+MOD_TESTED="termux-docker (amd64): install, start, auth (anonymous refused). Real device: no"
 
 CP_DIR=$REZ_DATA_DIR/copyparty
 
@@ -21,21 +22,19 @@ mod_configure() {
 }
 
 mod_install() {
-  local req
-  req=$(mktemp)
-  printf 'copyparty==%s --hash=sha256:%s\n' "$PIN_COPYPARTY_VERSION" "$PIN_COPYPARTY_WHEEL_SHA256" >"$req"
-  run python3 -m pip install --quiet --require-hashes --no-deps --only-binary=:all: -r "$req"
-  rm -f "$req"
   ensure_dir 700 "$CP_DIR"
+  fetch_verified "$PIN_COPYPARTY_URL" "$PIN_COPYPARTY_SHA256" "$CP_DIR/copyparty-sfx.py"
   ensure_dir 755 "$(_share)"
   local pw
   pw=$(secret_ensure copyparty_password 20)
+  # nih: do not reveal the phone's hostname in listings.
   atomic_write "$CP_DIR/copyparty.conf" 600 <<EOF
 # Written by rez. Docs: https://github.com/9001/copyparty
 [global]
   i: $(service_bind)
   p: $(_port)
   no-robots
+  nih
   hist: $CP_DIR/hist
 
 [accounts]
@@ -48,15 +47,17 @@ mod_install() {
 EOF
 }
 
+CP_EXE=copyparty-sfx.py
+
 mod_start() {
-  svc_start copyparty copyparty "" -- nice -n 10 "$PREFIX/bin/python3" -m copyparty -c "$CP_DIR/copyparty.conf"
+  svc_start copyparty "$CP_EXE" "" -- nice -n 10 "$PREFIX/bin/python3" "$CP_DIR/copyparty-sfx.py" -c "$CP_DIR/copyparty.conf"
 }
 
-mod_stop() { svc_stop copyparty copyparty; }
+mod_stop() { svc_stop copyparty "$CP_EXE"; }
 
-mod_status() { svc_status_line copyparty copyparty "" "port $(_port), sharing $(_share)"; }
+mod_status() { svc_status_line copyparty "$CP_EXE" "" "port $(_port), sharing $(_share)"; }
 
-mod_health() { svc_running copyparty copyparty && port_open 127.0.0.1 "$(_port)"; }
+mod_health() { svc_running copyparty "$CP_EXE" && port_open 127.0.0.1 "$(_port)"; }
 
 mod_backup() {
   mkdir -p "$1"
@@ -64,8 +65,8 @@ mod_backup() {
 }
 
 mod_uninstall() {
-  run python3 -m pip uninstall -y copyparty
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$CP_DIR"
+  run_cmd rm -f "$CP_DIR/copyparty-sfx.py"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$CP_DIR"
   info "shared files in $(_share) were left in place"
 }
 

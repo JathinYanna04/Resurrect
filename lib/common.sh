@@ -44,8 +44,9 @@ err()   { printf '%serror%s %s\n' "$_c_red" "$_c_off" "$*" >&2; _log_file "ERR  
 debug() { [[ "$REZ_DEBUG" == 1 ]] && printf '%sdebug %s%s\n' "$_c_dim" "$*" "$_c_off" >&2; return 0; }
 die()   { err "$*"; exit 1; }
 
-# run CMD...: execute, or only print it in dry-run mode.
-run() {
+# run_cmd CMD...: execute, or only print it in dry-run mode.
+# (Not "run": that name belongs to bats in the test suite.)
+run_cmd() {
   if [[ "$REZ_DRY_RUN" == 1 ]]; then
     printf '%s[dry-run]%s %s\n' "$_c_dim" "$_c_off" "$*" >&2
     return 0
@@ -70,8 +71,8 @@ require_cmd() {
 ensure_dir() {
   local mode=$1 d; shift
   for d in "$@"; do
-    [[ -d "$d" ]] || run mkdir -p "$d"
-    run chmod "$mode" "$d"
+    [[ -d "$d" ]] || run_cmd mkdir -p "$d"
+    run_cmd chmod "$mode" "$d"
   done
 }
 
@@ -87,7 +88,7 @@ REZ_HAS_ROOT="${REZ_HAS_ROOT:-unknown}"
 
 as_root() {
   [[ "$REZ_HAS_ROOT" == yes ]] || die "this action needs root, which is not available"
-  run su -c "$*"
+  run_cmd su -c "$*"
 }
 
 # --- Misc --------------------------------------------------------------------
@@ -144,6 +145,11 @@ mem_total_mb() {
 free_mb() {
   df -Pk "$1" 2>/dev/null | awk 'NR == 2 { print int($4 / 1024) }' || true
 }
+
+# TLS_ENV: where Linux Go/musl binaries find CA certificates on Android.
+# Termux's bundle first (kept current by pkg); Android's store as fallback
+# (on Android 14+ it can be stale, since updates go to an APEX).
+TLS_ENV=("SSL_CERT_FILE=$PREFIX/etc/tls/cert.pem" "SSL_CERT_DIR=/system/etc/security/cacerts")
 
 # port_open HOST PORT: TCP connect test, 3 s timeout.
 port_open() {

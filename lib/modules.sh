@@ -35,18 +35,24 @@ module_meta() ( module_load "$1"; v="MOD_$2"; printf '%s' "${!v}" )
 # module_has NAME FUNC: does the module implement mod_FUNC?
 module_has() ( module_load "$1"; declare -F "mod_$2" >/dev/null )
 
-# module_call NAME FUNC [ARGS]: run mod_FUNC in a subshell. Missing optional
-# functions are a no-op (status 0).
+# module_call NAME FUNC [ARGS]: run mod_FUNC. Missing optional functions are
+# a no-op. Anything that changes state runs in its own bash process so that
+# `set -e` is always in force (see lib/module-call.sh). Read-only queries run
+# in a cheaper subshell: `rez status` stays fast on old phones.
 module_call() {
-  local name=$1 fn=$2; shift 2
-  (
-    module_load "$name"
-    if ! declare -F "mod_$fn" >/dev/null; then
-      debug "$name has no mod_$fn"
-      exit 0
-    fi
-    "mod_$fn" "$@"
-  )
+  local name=$1 fn=$2
+  module_exists "$name" || die "unknown module: $name"
+  case "$fn" in
+    status | health | info | cron | doctor | restore_check)
+      shift 2
+      (
+        module_load "$name"
+        declare -F "mod_$fn" >/dev/null || exit 0
+        "mod_$fn" "$@"
+      )
+      ;;
+    *) bash "$REZ_ROOT/lib/module-call.sh" "$@" ;;
+  esac
 }
 
 # module_ineligible NAME: print why NAME cannot be installed here; status 0
@@ -71,6 +77,7 @@ module_ineligible() (
 # modules_sorted LIST: LIST (comma separated) plus dependencies, in install order.
 modules_sorted() {
   local want=",$1," m d changed=1
+  for m in ${1//,/ }; do module_exists "$m" || die "unknown module: $m (see rez modules)"; done
   while ((changed)); do
     changed=0
     for m in "${REZ_MODULE_ORDER[@]}"; do

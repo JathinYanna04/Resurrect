@@ -31,11 +31,14 @@ mod_configure() {
   fi
 }
 
-mod_install() { is_termux && run pkg install -y cloudflared; return 0; }
+mod_install() { is_termux && run_cmd pkg install -y cloudflared; return 0; }
 
 mod_start() {
   local t
-  t=$(secret_get cloudflared_token) || die "no tunnel token: rez install cloudflared"
+  if ! t=$(secret_get cloudflared_token); then
+    [[ "$REZ_DRY_RUN" == 1 ]] || die "no tunnel token: rez install cloudflared"
+    t='<token>'
+  fi
   # Token via the environment, not argv: argv is visible in /proc.
   SVC_ENV=("TUNNEL_TOKEN=$t")
   SVC_SUPERVISE=1 svc_start cloudflared cloudflared "tunnel" -- cloudflared tunnel --no-autoupdate run

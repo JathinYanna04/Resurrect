@@ -11,7 +11,7 @@ MOD_DESC="Nightly backups, keep N, weekly restore test, optional pull to a compu
 MOD_DEPENDS="base"
 MOD_SERVICE=0
 MOD_DISK_EST_MB=50
-MOD_TESTED="termux-docker: run, rotate, verify, extract. Cron timing: real device only"
+MOD_TESTED="termux-docker: run, rotation, restore test, archive contents, folder mode. Cron timing: real device only"
 
 _dir() { local d; d=$(cfg_get backup.dir "$HOME/resurrect-backups"); echo "${d/#\~/$HOME}"; }
 _keep() { cfg_get backup.keep 7; }
@@ -39,7 +39,9 @@ mod_cron() {
   echo "15 5 * * 0 $(rez_cmd) backup verify >>$REZ_LOG_DIR/backup.log 2>&1"
 }
 
-_latest() { find "$(_dir)" -maxdepth 1 -name 'resurrect-*.tar.gz' -printf '%T@ %p\n' 2>/dev/null | sort -rn | awk 'NR==1 { print $2 }'; }
+# Newest first. Names never contain spaces (resurrect-DATE_TIME.tar.gz).
+_archives() { ls -1t "$(_dir)"/resurrect-*.tar.gz 2>/dev/null || true; }
+_latest() { _archives | head -n1; }
 
 backup_run() {
   local out work name m fail=0 failed=''
@@ -71,8 +73,7 @@ backup_run() {
   fi
   rm -rf "$work"
   # Keep the newest N archives.
-  find "$out" -maxdepth 1 -name 'resurrect-*.tar.gz' -printf '%T@ %p\n' | sort -rn | awk -v k="$(_keep)" 'NR > k { print $2 }' \
-    | while read -r old; do rm -f "$old" "$old.sha256"; done
+  _archives | tail -n +"$(( $(_keep) + 1 ))" | while read -r old; do rm -f "$old" "$old.sha256"; done
   if ((fail)); then
     notify_send "Backup failed" "Problems with: $failed. Log: $REZ_LOG_DIR/backup.log" 4 warning
     return 1
@@ -116,7 +117,7 @@ _age_h() { local t; t=$(cat "$1" 2>/dev/null) || { echo -1; return; }; echo $(( 
 
 mod_status() {
   local n last
-  n=$(find "$(_dir)" -maxdepth 1 -name 'resurrect-*.tar.gz' 2>/dev/null | wc -l)
+  n=$(_archives | wc -l)
   last=$(_age_h "$(_stamp last-backup)")
   printf '%-14s %s backups kept, last %s, verified %s, pulled %s\n' backup "$n" \
     "$( ((last >= 0)) && echo "${last}h ago" || echo never)" \

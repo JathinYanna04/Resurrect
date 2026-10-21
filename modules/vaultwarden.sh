@@ -17,7 +17,7 @@ MOD_PORTS="8222"
 MOD_ARCHES="arm64 armv7 amd64"
 MOD_RAM_EST_MB=30
 MOD_DISK_EST_MB=120
-MOD_TESTED="termux-docker (amd64): image extraction, start, sign-up close + verify. HTTPS via tailscale cert: real device only"
+MOD_TESTED="termux-docker (amd64): image extraction, HTTPS (self-signed), sign-up close + verify, argon2 admin token. Tailscale cert: real device only"
 
 VW_DIR=$REZ_DATA_DIR/vaultwarden
 VW_ENV=$REZ_CONFIG_DIR/vaultwarden.env
@@ -109,14 +109,15 @@ _cert() {
 _selfsigned() {
   local host
   host=$(device_host)
-  run openssl req -x509 -newkey rsa:2048 -nodes -days 825 \
+  run_cmd openssl req -x509 -newkey rsa:2048 -nodes -days 825 \
     -keyout "$VW_DIR/tls/key.pem" -out "$VW_DIR/tls/cert.pem" \
     -subj "/CN=$host" -addext "subjectAltName=DNS:$host,DNS:localhost,IP:127.0.0.1" 2>/dev/null
-  run chmod 600 "$VW_DIR/tls/key.pem" "$VW_DIR/tls/cert.pem"
+  run_cmd chmod 600 "$VW_DIR/tls/key.pem" "$VW_DIR/tls/cert.pem"
 }
 
 _write_env() {
-  local signups=false
+  local signups=false token='<generated at install>'
+  [[ "$REZ_DRY_RUN" == 1 ]] || token=$(cat "$VW_DIR/admin_token")
   [[ "$(cfg_get vaultwarden.signups closed)" == open ]] && signups=true
   atomic_write "$VW_ENV" 600 <<EOF
 DATA_FOLDER=$VW_DIR/data
@@ -130,8 +131,9 @@ DOMAIN=$(_scheme_host)
 SIGNUPS_ALLOWED=$signups
 INVITATIONS_ALLOWED=false
 SHOW_PASSWORD_HINT=false
-ADMIN_TOKEN=$(cat "$VW_DIR/admin_token")
-SSL_CERT_DIR=/system/etc/security/cacerts
+ADMIN_TOKEN=$token
+${TLS_ENV[0]}
+${TLS_ENV[1]}
 LOG_LEVEL=warn
 EXTENDED_LOGGING=true
 ROCKET_TLS={certs="$VW_DIR/tls/cert.pem",key="$VW_DIR/tls/key.pem"}
@@ -140,6 +142,7 @@ EOF
 
 _env_array() {
   SVC_ENV=()
+  [[ -f "$VW_ENV" ]] || return 0   # dry run: nothing was written
   local line
   while IFS= read -r line; do
     [[ -n "$line" && "$line" != \#* ]] && SVC_ENV+=("$line")
@@ -248,9 +251,9 @@ mod_restore_check() {
 }
 
 mod_uninstall() {
-  run rm -f "$VW_DIR/vaultwarden" "$VW_ENV"
-  run rm -rf "$VW_DIR/web-vault"
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$VW_DIR"
+  run_cmd rm -f "$VW_DIR/vaultwarden" "$VW_ENV"
+  run_cmd rm -rf "$VW_DIR/web-vault"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$VW_DIR"
   return 0
 }
 

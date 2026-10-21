@@ -124,7 +124,7 @@ secret_set() {
   printf '%s' "$2" | atomic_write "$f" 600
 }
 
-secret_del() { run rm -f "$(_secret_path "$1")"; }
+secret_del() { run_cmd rm -f "$(_secret_path "$1")"; }
 
 # secret_ensure NAME [LEN]: print the secret, generating it on first use.
 secret_ensure() {

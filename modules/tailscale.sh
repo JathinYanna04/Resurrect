@@ -61,8 +61,8 @@ Services will listen on all interfaces; use a strong password for each."
   proot_install
   local tgz work root
   tgz=$(fetch_pinned tailscale)
-  root=$(proot_rootfs)
   [[ "$REZ_DRY_RUN" == 1 ]] && return 0
+  root=$(proot_rootfs)
   work=$(mktemp -d)
   tar -xzf "$tgz" -C "$work"
   install -m 755 "$work"/tailscale_*/tailscale "$work"/tailscale_*/tailscaled "$root/usr/local/bin/"
@@ -164,8 +164,8 @@ mod_uninstall() {
   local root
   root=$(proot_rootfs) || return 0
   ts logout 2>/dev/null || true
-  run rm -f "$root/usr/local/bin/tailscale" "$root/usr/local/bin/tailscaled"
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "${root:?}$TS_DIR"
+  run_cmd rm -f "$root/usr/local/bin/tailscale" "$root/usr/local/bin/tailscaled"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "${root:?}$TS_DIR"
   return 0
 }
 

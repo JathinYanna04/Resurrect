@@ -271,7 +271,7 @@ Running two startup scripts is how services end up started twice.
 Move them to ~/.termux/boot-disabled/ (nothing is deleted)?" yes; }; then
     ensure_dir 700 "$HOME/.termux/boot-disabled"
     for f in "${extra[@]}"; do
-      run mv -n "$f" "$HOME/.termux/boot-disabled/"
+      run_cmd mv -n "$f" "$HOME/.termux/boot-disabled/"
     done
     ok "moved ${#extra[@]} file(s) to ~/.termux/boot-disabled/"
   else

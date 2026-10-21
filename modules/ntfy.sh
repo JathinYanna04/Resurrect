@@ -12,7 +12,7 @@ MOD_PORTS="2586"
 MOD_ARCHES="arm64 armv7 amd64"
 MOD_RAM_EST_MB=25
 MOD_DISK_EST_MB=30
-MOD_TESTED="termux-docker (amd64): install, users, publish. Real device: no"
+MOD_TESTED="termux-docker (amd64): install, users and ACLs (publish-only, read-only, anonymous refused). Real device: no"
 
 NTFY_DIR=$REZ_DATA_DIR/ntfy
 NTFY_BIN=$NTFY_DIR/ntfy
@@ -21,8 +21,8 @@ _mode() { cfg_get ntfy.mode local; }
 _port() { cfg_get ntfy.port 2586; }
 _topic() { cfg_get ntfy.topic alerts; }
 
-# The Go binary needs Android's CA store for any outbound TLS.
-_ntfy() { env SSL_CERT_DIR=/system/etc/security/cacerts NTFY_AUTH_FILE="$NTFY_DIR/user.db" "$NTFY_BIN" "$@"; }
+# The Go binary needs to be told where the CA certificates are (TLS_ENV).
+_ntfy() { env "${TLS_ENV[@]}" NTFY_AUTH_FILE="$NTFY_DIR/user.db" "$NTFY_BIN" "$@"; }
 
 mod_configure() {
   local mode
@@ -78,10 +78,24 @@ EOF
 
 _user_exists() { _ntfy user list 2>&1 | grep -qE "^user $1 "; }
 
+# The ntfy CLI refuses to manage users until the server has created its auth
+# database, so run the server briefly the first time.
+_ensure_auth_db() {
+  [[ -s "$NTFY_DIR/user.db" ]] && return 0
+  env "${TLS_ENV[@]}" "$NTFY_BIN" serve --config "$NTFY_DIR/server.yml" \
+    >>"$REZ_LOG_DIR/ntfy.log" 2>&1 </dev/null &
+  local pid=$! i
+  for i in $(seq 1 20); do [[ -s "$NTFY_DIR/user.db" ]] && break; sleep 0.5; done
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  [[ -s "$NTFY_DIR/user.db" ]] || die "ntfy did not create its user database; see $REZ_LOG_DIR/ntfy.log"
+}
+
 # Users are created with passwords from the secrets dir; NTFY_PASSWORD keeps
 # them off the command line.
 _users() {
   local topic pw
+  _ensure_auth_db
   topic=$(_topic)
   if ! _user_exists admin; then
     pw=$(secret_ensure ntfy_admin_password 24)
@@ -107,7 +121,7 @@ _users() {
 
 mod_start() {
   [[ "$(_mode)" == external ]] && return 0
-  svc_start ntfy ntfy "serve" -- nice -n 10 env SSL_CERT_DIR=/system/etc/security/cacerts \
+  svc_start ntfy ntfy "serve" -- nice -n 10 env "${TLS_ENV[@]}" \
     "$NTFY_BIN" serve --config "$NTFY_DIR/server.yml"
 }
 
@@ -142,8 +156,8 @@ mod_restore_check() {
 }
 
 mod_uninstall() {
-  run rm -f "$NTFY_BIN"
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$NTFY_DIR"
+  run_cmd rm -f "$NTFY_BIN"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$NTFY_DIR"
   return 0
 }
 

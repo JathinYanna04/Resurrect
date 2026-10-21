@@ -11,11 +11,13 @@ MOD_NAME=monitor
 MOD_DESC="Health checks every minute with ntfy alerts and auto-restart"
 MOD_DEPENDS="base"
 MOD_RAM_EST_MB=5
-MOD_TESTED="termux-docker: loop, alert-after-2, recovery, restart. Battery sensors: real device only"
+MOD_TESTED="termux-docker: detects a killed service, alerts via ntfy, restarts it. Battery sensors: real device only"
 
 MON_STATE=$REZ_STATE_DIR/monitor
 
 _interval() { cfg_get monitor.interval 60; }
+
+mod_install() { ensure_dir 700 "$MON_STATE"; }
 
 mod_start() {
   svc_start monitor rez "rez monitor loop" -- "$PREFIX/bin/bash" "$REZ_ROOT/bin/rez" monitor loop

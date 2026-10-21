@@ -7,7 +7,7 @@ MOD_DEPENDS="base"
 MOD_PORTS="8085"
 MOD_RAM_EST_MB=30
 MOD_DISK_EST_MB=40
-MOD_TESTED="termux-docker (amd64): install, user creation, start. Real device: no"
+MOD_TESTED="termux-docker (amd64): install, start, admin login. Real device: no"
 
 FB_DIR=$REZ_DATA_DIR/filebrowser
 
@@ -49,8 +49,8 @@ mod_backup() {
 }
 
 mod_uninstall() {
-  run rm -f "$FB_DIR/filebrowser"
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$FB_DIR"
+  run_cmd rm -f "$FB_DIR/filebrowser"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$FB_DIR"
   return 0
 }
 

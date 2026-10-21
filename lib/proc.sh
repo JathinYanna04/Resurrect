@@ -63,13 +63,19 @@ _proc_ancestors() {
 }
 
 # proc_find EXE [ARGS_REGEX]: print PIDs of matching processes, oldest first.
+# Skips the caller: its ancestors, and its own forks (bash forks a subshell
+# for every pipeline and $(...); a fork keeps the caller's exact cmdline but
+# is not an ancestor). $$ is the main shell's PID even inside subshells.
 proc_find() {
-  local exe=$1 args=${2:-} skip d pid
+  local exe=$1 args=${2:-} skip self d pid
   skip=$(_proc_ancestors)
+  self=$(proc_argv "$$" 2>/dev/null || true)
   for d in "$REZ_PROC"/[0-9]*; do
     pid=${d##*/}
     [[ "$skip" == *" $pid "* ]] && continue
-    proc_matches "$pid" "$exe" "$args" && echo "$pid"
+    proc_matches "$pid" "$exe" "$args" || continue
+    [[ -n "$self" && "$(proc_argv "$pid" 2>/dev/null)" == "$self" ]] && continue
+    echo "$pid"
   done | sort -n
 }
 
@@ -113,7 +119,7 @@ svc_start() {
     return 0
   fi
   if [[ "$REZ_DRY_RUN" == 1 ]]; then
-    run "$@"
+    run_cmd "$@"
     return 0
   fi
   mkdir -p "$REZ_LOG_DIR" "$REZ_RUN_DIR"
@@ -142,14 +148,14 @@ svc_stop() {
   local name=$1 exe=$2 args=${3:-} pid loop i
   touch "$REZ_RUN_DIR/$name.stop" 2>/dev/null || true
   for loop in $(proc_find supervise.sh "supervise\.sh $name( |$)"); do
-    run kill "$loop" 2>/dev/null || true
+    run_cmd kill "$loop" 2>/dev/null || true
   done
   if ! pid=$(svc_pid "$name" "$exe" "$args"); then
     ok "$name not running"
     rm -f "$(_svc_pidfile "$name")"
     return 0
   fi
-  run kill "$pid" 2>/dev/null || true
+  run_cmd kill "$pid" 2>/dev/null || true
   [[ "$REZ_DRY_RUN" == 1 ]] && return 0
   for i in $(seq 1 15); do
     proc_matches "$pid" "$exe" "$args" || break

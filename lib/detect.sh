@@ -119,6 +119,8 @@ detect_all() {
   detect_root "${1:-}"
   detect_termux
   detect_phantom
+  # Module actions run in child processes (lib/module-call.sh).
+  export "${!DEV_@}" REZ_HAS_ROOT
 }
 
 # recommend_profile: by MemTotal. Phones report less than their marketing

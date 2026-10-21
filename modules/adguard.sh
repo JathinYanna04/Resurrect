@@ -18,7 +18,7 @@ MOD_DEPENDS="base"
 MOD_PORTS="5335 3000"
 MOD_RAM_EST_MB=110
 MOD_DISK_EST_MB=40
-MOD_TESTED="termux-docker (amd64): no-root install + start. Root mode and Magisk launcher: real device only"
+MOD_TESTED="termux-docker (amd64): no-root install, start, login, DNS. Root mode and Magisk launcher: real device only"
 
 AGH_USER_DIR=$REZ_DATA_DIR/adguard
 AGH_ROOT_DIR=/data/adb/resurrect/adguard
@@ -53,8 +53,8 @@ _launcher() {
 # AdGuard Home for resurrect. Run as root by Magisk at every boot.
 # Written by rez; edit with: rez adguard reinstall
 D=$AGH_ROOT_DIR
-# Go build: use Android's CA store, or every DoH upstream fails.
-export SSL_CERT_DIR=/system/etc/security/cacerts
+# Go build: tell it where CA certificates are, or every DoH upstream fails.
+export ${TLS_ENV[0]} ${TLS_ENV[1]}
 until [ "\$(getprop sys.boot_completed)" = 1 ]; do sleep 5; done
 # Only trust the pidfile if that PID really is AdGuardHome: after a reboot
 # Android reuses PIDs, and as root a plain kill -0 succeeds on any process.
@@ -69,23 +69,69 @@ nohup \$D/AdGuardHome -w \$D -c \$D/AdGuardHome.yaml --pidfile \$D/agh.pid --no-
 EOF
 }
 
+# _config: AdGuard's first-run wizard refuses to start unless it can bind
+# privileged ports, which an app without root never can. So resurrect writes
+# the config itself (AdGuard fills in every other setting with its defaults
+# and upgrades the file). Password: rez adguard show-password.
+_config() {
+  local hash
+  hash=$(secret_ensure adguard_password 20 | python3 -c 'import sys, bcrypt
+print(bcrypt.hashpw(sys.stdin.read().encode(), bcrypt.gensalt(10)).decode())') \
+    || die "bcrypt not available (pkg install python-bcrypt)"
+  cat <<EOF
+# Written by rez on first install; AdGuard Home owns this file from now on.
+http:
+  address: $(service_bind):$(_ui_port)
+users:
+  - name: admin
+    password: $hash
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: $(_dns_port)
+  upstream_dns:
+    - https://dns.quad9.net/dns-query
+    - https://cloudflare-dns.com/dns-query
+  upstream_mode: load_balance
+  bootstrap_dns:
+    - 9.9.9.9
+    - 1.1.1.1
+  cache_optimistic: true
+  enable_dnssec: true
+filters:
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+    name: AdGuard DNS filter
+    id: 1
+querylog:
+  interval: 24h
+statistics:
+  interval: 1d
+schema_version: $PIN_ADGUARD_SCHEMA
+EOF
+}
+
 mod_install() {
   local tgz work
+  is_termux && run_cmd pkg install -y python-bcrypt
   tgz=$(fetch_pinned adguard)
   [[ "$REZ_DRY_RUN" == 1 ]] && return 0
   work=$(mktemp -d)
   tar -xzf "$tgz" -C "$work"
   if [[ "$(_mode)" == root ]]; then
     _launcher >"$work/launcher.sh"
+    _configured || _config >"$work/AdGuardHome.yaml"
     as_root "mkdir -p $AGH_ROOT_DIR /data/adb/service.d && chmod 700 $AGH_ROOT_DIR \
       && cp $work/AdGuardHome/AdGuardHome $AGH_ROOT_DIR/ && chmod 700 $AGH_ROOT_DIR/AdGuardHome \
-      && cp $work/launcher.sh $AGH_LAUNCHER && chmod 755 $AGH_LAUNCHER"
+      && cp $work/launcher.sh $AGH_LAUNCHER && chmod 755 $AGH_LAUNCHER \
+      && { [ ! -f $work/AdGuardHome.yaml ] || install -m 600 $work/AdGuardHome.yaml $AGH_ROOT_DIR/AdGuardHome.yaml; }"
   else
     ensure_dir 700 "$AGH_USER_DIR"
     install -m 755 "$work/AdGuardHome/AdGuardHome" "$AGH_USER_DIR/AdGuardHome"
+    _configured || _config | atomic_write "$AGH_USER_DIR/AdGuardHome.yaml" 600
   fi
   rm -rf "$work"
-  ok "AdGuard Home $PIN_ADGUARD_VERSION installed ($(_mode) mode)"
+  ok "AdGuard Home $PIN_ADGUARD_VERSION installed ($(_mode) mode, DNS port $(_dns_port))"
 }
 
 _root_pid() {
@@ -96,6 +142,7 @@ mod_start() {
   if [[ "$(_mode)" == root ]]; then
     if [[ -n "$(_root_pid)" ]]; then ok "adguard already running"; return 0; fi
     as_root "sh $AGH_LAUNCHER"
+    [[ "$REZ_DRY_RUN" == 1 ]] && return 0
     sleep 3
     if [[ -z "$(_root_pid)" ]]; then
       err "adguard did not start; log: su -c 'tail $AGH_ROOT_DIR/agh.log'"
@@ -104,7 +151,7 @@ mod_start() {
     ok "adguard started"
     return 0
   fi
-  SVC_ENV=(SSL_CERT_DIR=/system/etc/security/cacerts)
+  SVC_ENV=("${TLS_ENV[@]}")
   SVC_SUPERVISE=1 svc_start adguard AdGuardHome "" -- "$AGH_USER_DIR/AdGuardHome" -w "$AGH_USER_DIR" \
     -c "$AGH_USER_DIR/AdGuardHome.yaml" --no-check-update --web-addr "$(service_bind):$(_ui_port)"
 }
@@ -132,7 +179,6 @@ _dns_ok() { python3 "$REZ_ROOT/lib/dnsprobe.py" 127.0.0.1 "$(_dns_port)" >/dev/n
 mod_status() {
   local extra
   extra="DNS :$(_dns_port), UI :$(_ui_port)"
-  _configured || extra="NOT SET UP: open http://$(device_host):$(_ui_port) to finish"
   if [[ "$(_mode)" == root ]]; then
     local p
     p=$(_root_pid)
@@ -145,8 +191,7 @@ mod_status() {
 }
 
 mod_health() {
-  _configured || return 0
-  _dns_ok
+  _dns_ok || { echo "no DNS answer on port $(_dns_port)"; return 1; }
 }
 
 mod_backup() {
@@ -169,19 +214,15 @@ mod_uninstall() {
     as_root "rm -f $AGH_LAUNCHER $AGH_ROOT_DIR/AdGuardHome"
     [[ "${REZ_PURGE:-0}" == 1 ]] && as_root "rm -rf $AGH_ROOT_DIR"
   else
-    run rm -f "$AGH_USER_DIR/AdGuardHome"
-    [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$AGH_USER_DIR"
+    run_cmd rm -f "$AGH_USER_DIR/AdGuardHome"
+    [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$AGH_USER_DIR"
   fi
   return 0
 }
 
 mod_info() {
-  printf 'AdGuard:    http://%s:%s' "$(device_host)" "$(_ui_port)"
-  if ! _configured; then
-    printf '  <- open it to finish setup: create the admin login and set the DNS port to %s\n' "$(_dns_port)"
-  else
-    printf '  DNS on port %s\n' "$(_dns_port)"
-  fi
+  printf 'AdGuard:    http://%s:%s  user admin, password: rez adguard show-password; DNS on port %s\n' \
+    "$(device_host)" "$(_ui_port)" "$(_dns_port)"
   printf '            Before pointing devices at it, read docs/dns-and-adguard.md (fallback + emergency steps).\n'
 }
 
@@ -189,6 +230,7 @@ mod_cli() {
   case "${1:-}" in
     test) if _dns_ok; then ok "AdGuard answers DNS on port $(_dns_port)"; else err "no DNS answer on port $(_dns_port)"; return 1; fi ;;
     reinstall) mod_stop; mod_install; mod_start ;;
-    *) die "usage: rez adguard test|reinstall" ;;
+    show-password) secret_get adguard_password; echo ;;
+    *) die "usage: rez adguard test|show-password|reinstall" ;;
   esac
 }

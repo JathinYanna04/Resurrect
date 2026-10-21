@@ -7,7 +7,7 @@ MOD_DESC="Termux packages, SSH (keys only), wake lock, cron, boot startup"
 MOD_PORTS="8022"
 MOD_RAM_EST_MB=10
 MOD_DISK_EST_MB=150
-MOD_TESTED="termux-docker: packages, sshd config, cron block. Real device: no"
+MOD_TESTED="termux-docker: packages, key-only sshd, cron block, boot script, boot lock. Termux:Boot itself: real device only"
 
 BASE_PKGS=(openssh cronie util-linux procps dialog jq curl openssl-tool sqlite python rsync iproute2 termux-tools)
 
@@ -39,8 +39,8 @@ base_add_key() {
   [[ "$key" =~ ^(ssh-(ed25519|rsa)|ecdsa-sha2-[a-z0-9]+|sk-[a-z0-9@.-]+)\ [A-Za-z0-9+/=]+ ]] || die "that does not look like an SSH public key"
   ensure_dir 700 "$HOME/.ssh"
   touch "$(_authkeys)"
-  grep -qF "$key" "$(_authkeys)" || run sh -c "printf '%s\n' \"\$1\" >> \"\$2\"" _ "$key" "$(_authkeys)"
-  run chmod 600 "$(_authkeys)"
+  grep -qF "$key" "$(_authkeys)" || run_cmd sh -c "printf '%s\n' \"\$1\" >> \"\$2\"" _ "$key" "$(_authkeys)"
+  run_cmd chmod 600 "$(_authkeys)"
   ok "SSH key added"
 }
 
@@ -53,18 +53,18 @@ _harden_sshd() {
   local k
   for k in PasswordAuthentication KbdInteractiveAuthentication; do
     if grep -qE "^[#[:space:]]*$k" "$f"; then
-      run sed -i -E "s/^[#[:space:]]*$k.*/$k no/" "$f"
+      run_cmd sed -i -E "s/^[#[:space:]]*$k.*/$k no/" "$f"
     else
-      run sh -c "echo '$k no' >> '$f'"
+      run_cmd sh -c "echo '$k no' >> '$f'"
     fi
   done
-  grep -qE '^PubkeyAuthentication' "$f" || run sh -c "echo 'PubkeyAuthentication yes' >> '$f'"
+  grep -qE '^PubkeyAuthentication' "$f" || run_cmd sh -c "echo 'PubkeyAuthentication yes' >> '$f'"
 }
 
 mod_install() {
   if is_termux; then
-    run pkg update -y
-    run pkg install -y "${BASE_PKGS[@]}"
+    run_cmd pkg update -y
+    run_cmd pkg install -y "${BASE_PKGS[@]}"
   else
     warn "not Termux: skipping package installation"
   fi
@@ -83,22 +83,22 @@ mod_install() {
 _sshd_up() { svc_running sshd sshd; }
 
 mod_start() {
-  have termux-wake-lock && run termux-wake-lock
+  if have termux-wake-lock; then run_cmd timeout 10 termux-wake-lock || warn "could not take the wake lock"; fi
   if _has_key; then
-    if _sshd_up; then ok "sshd already running"; else run sshd && ok "sshd started on port 8022"; fi
+    if _sshd_up; then ok "sshd already running"; else run_cmd sshd && ok "sshd started on port 8022"; fi
   else
     warn "sshd not started: no SSH key yet (rez base add-key 'ssh-ed25519 AAAA...')"
   fi
   # crond daemonizes itself; full path because PATH is minimal at boot.
   if svc_running crond crond; then ok "crond already running"
-  elif [[ -x "$PREFIX/bin/crond" ]]; then run "$PREFIX/bin/crond" && ok "crond started"
+  elif [[ -x "$PREFIX/bin/crond" ]]; then run_cmd "$PREFIX/bin/crond" && ok "crond started"
   fi
 }
 
 mod_stop() {
   # Stopping sshd would cut off the session you are probably using.
   info "base: leaving sshd and crond running (stop them by hand with pkill -x sshd / crond)"
-  have termux-wake-unlock && run termux-wake-unlock
+  if have termux-wake-unlock; then run_cmd timeout 10 termux-wake-unlock || true; fi
   return 0
 }
 
@@ -120,7 +120,7 @@ mod_doctor() {
   if [[ -f "$f" ]] && grep -qE '^PasswordAuthentication no' "$f"; then
     printf '  %sPASS%s ssh password login disabled\n' "$_c_grn" "$_c_off"
   elif [[ -f "$f" ]]; then
-    printf '  %sFAIL%s ssh password login is enabled (run rez install base)\n' "$_c_red" "$_c_off"
+    printf '  %sFAIL%s ssh password login is enabled (run_cmd rez install base)\n' "$_c_red" "$_c_off"
   fi
 }
 
@@ -134,7 +134,7 @@ mod_backup() {
 }
 
 mod_uninstall() {
-  run rm -f "$REZ_BOOT_DIR/resurrect" "$PREFIX/bin/rez"
+  run_cmd rm -f "$REZ_BOOT_DIR/resurrect" "$PREFIX/bin/rez"
   printf '' | cron_install_block
   info "packages and SSH keys were left in place"
 }

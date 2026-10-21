@@ -53,10 +53,14 @@ declare -gA PIN_VAULTWARDEN_SHA256=(
   [amd64]=7d90670a4e2531e752f014e58f7283b9d197847b6f073bf84e99598f49d80ffd
 )
 
-# copyparty is a pure-Python wheel with no dependencies; pip installs it with
-# --require-hashes so the wheel is verified like everything else.
+# copyparty's self-contained single-file build (bundles jinja2, which Termux
+# does not package).
 PIN_COPYPARTY_VERSION="1.20.26"
-PIN_COPYPARTY_WHEEL_SHA256="7e51a2576699c089fe6ad74dfd59db02575eb4211af8870372b10a63caf611cb"
+PIN_COPYPARTY_URL="https://github.com/9001/copyparty/releases/download/v1.20.26/copyparty-sfx.py"
+PIN_COPYPARTY_SHA256="8f9a0def8a9c15252a06395781ec083372043b60caa80fb33c3d6dafa7f1b40a"
+
+# AdGuard Home config format written by resurrect (AdGuard upgrades it).
+PIN_ADGUARD_SCHEMA=34
 
 PIN_ACC_VERSION="v2023.10.16"
 PIN_ACC_URL="https://github.com/VR-25/acc/releases/download/v2023.10.16/acc_v2023.10.16_202310160.zip"

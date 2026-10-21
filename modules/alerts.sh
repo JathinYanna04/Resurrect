@@ -32,7 +32,7 @@ mod_install() {
   ensure_dir 700 "$AL_JOBS"
   local f
   for f in "$REZ_ROOT"/alerts/examples/*.toml; do
-    [[ -e "$AL_JOBS/${f##*/}" ]] || run install -m 600 "$f" "$AL_JOBS/${f##*/}"
+    [[ -e "$AL_JOBS/${f##*/}" ]] || run_cmd install -m 600 "$f" "$AL_JOBS/${f##*/}"
   done
   ok "example jobs copied to $AL_JOBS (all disabled; edit, set enabled = true, then rez alerts sync)"
 }
@@ -64,7 +64,7 @@ mod_backup() {
 }
 
 mod_uninstall() {
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run rm -rf "$AL_JOBS" "$REZ_STATE_DIR/alerts.db"
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd rm -rf "$AL_JOBS" "$REZ_STATE_DIR/alerts.db"
   return 0
 }
 

@@ -31,10 +31,10 @@ mod_configure() {
 
 mod_install() {
   proot_install
-  local codename
+  local codename='<debian-codename>'
   # shellcheck disable=SC2016  # expanded inside Debian, not here
-  codename=$(proot_exec sh -c '. /etc/os-release && echo "$VERSION_CODENAME"')
-  run proot_exec sh -c "set -e
+  [[ "$REZ_DRY_RUN" == 1 ]] || codename=$(proot_exec sh -c '. /etc/os-release && echo "$VERSION_CODENAME"')
+  run_cmd proot_exec sh -c "set -e
     apt-get install -y --no-install-recommends gnupg
     mkdir -p /etc/apt/keyrings
     curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor --yes -o /etc/apt/keyrings/jellyfin.gpg
@@ -70,8 +70,8 @@ mod_backup() {
 }
 
 mod_uninstall() {
-  run proot_exec apt-get remove -y jellyfin-server jellyfin-web jellyfin-ffmpeg7
-  [[ "${REZ_PURGE:-0}" == 1 ]] && run proot_exec rm -rf /var/lib/jellyfin /var/cache/jellyfin
+  run_cmd proot_exec apt-get remove -y jellyfin-server jellyfin-web jellyfin-ffmpeg7
+  [[ "${REZ_PURGE:-0}" == 1 ]] && run_cmd proot_exec rm -rf /var/lib/jellyfin /var/cache/jellyfin
   return 0
 }
 
