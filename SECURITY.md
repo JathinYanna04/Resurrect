@@ -18,8 +18,8 @@ resurrect is a pre-release. Security fixes go into the latest release and the `m
 
 Report vulnerabilities privately through GitHub's security advisories:
 
-1. Open the repository's [**Security** tab](https://github.com/JathinYanna04/resurrect/security).
-2. Choose **Report a vulnerability**, or go straight to the [new advisory form](https://github.com/JathinYanna04/resurrect/security/advisories/new).
+1. Open the repository's [**Security** tab](https://github.com/JathinYanna04/Resurrect/security).
+2. Choose **Report a vulnerability**, or go straight to the [new advisory form](https://github.com/JathinYanna04/Resurrect/security/advisories/new).
 3. Describe the problem, the affected version or commit, and the steps to reproduce it. Leave out real passwords, tokens and addresses.
 
 Only the maintainers can see the report. You can discuss it with them in the advisory, and you are credited in the published advisory unless you prefer not to be.

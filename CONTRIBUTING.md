@@ -22,7 +22,7 @@ By taking part, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 | Contribution | Why it matters |
 |---|---|
 | [Device reports](#submitting-a-device-report) | resurrect has only been tested in containers. Every report tells someone else whether their old device will work |
-| [Bug reports](https://github.com/JathinYanna04/resurrect/issues/new?template=bug.yml) | Include `rez doctor` output and log lines, with passwords, tokens and addresses removed |
+| [Bug reports](https://github.com/JathinYanna04/Resurrect/issues/new?template=bug.yml) | Include `rez doctor` output and log lines, with passwords, tokens and addresses removed |
 | Fixes and new modules | See [docs/writing-a-module.md](docs/writing-a-module.md) |
 | Documentation | Corrections are welcome. Every command, flag, port and path must match the code |
 
@@ -51,7 +51,7 @@ These are not negotiable, because they are what makes resurrect safe to run:
 1. Clone the repository and enable the hooks, which run the privacy scan on every commit and push:
 
    ```bash
-   git clone https://github.com/JathinYanna04/resurrect
+   git clone https://github.com/JathinYanna04/Resurrect
    cd resurrect
    git config core.hooksPath scripts/hooks
    ```
@@ -165,7 +165,7 @@ The pull request template repeats this checklist. Small, focused pull requests a
    rez doctor
    ```
 
-4. Open a [device report](https://github.com/JathinYanna04/resurrect/issues/new?template=device-report.yml) and paste the output. Say which modules worked, MemAvailable after a day, whether everything came back after a reboot, and any vendor settings you had to change.
+4. Open a [device report](https://github.com/JathinYanna04/Resurrect/issues/new?template=device-report.yml) and paste the output. Say which modules worked, MemAvailable after a day, whether everything came back after a reboot, and any vendor settings you had to change.
 
 Reported devices are listed in [docs/tested-devices.md](docs/tested-devices.md).
 

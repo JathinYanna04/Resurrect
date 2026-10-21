@@ -47,6 +47,6 @@ First public pre-release. Tested in the official Termux container, not yet on re
 | copyparty | 1.20.26 |
 | ACC | v2023.10.16 |
 
-[Unreleased]: https://github.com/JathinYanna04/resurrect/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/JathinYanna04/resurrect/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/JathinYanna04/resurrect/releases/tag/v0.1.0
+[Unreleased]: https://github.com/JathinYanna04/Resurrect/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/JathinYanna04/Resurrect/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/JathinYanna04/Resurrect/releases/tag/v0.1.0

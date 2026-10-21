@@ -43,7 +43,7 @@ This page lists real devices that people have run resurrect on, and how it went.
    rez doctor
    ```
 
-3. Open a [device report](https://github.com/JathinYanna04/resurrect/issues/new?template=device-report.yml) and paste both outputs. The most useful details are:
+3. Open a [device report](https://github.com/JathinYanna04/Resurrect/issues/new?template=device-report.yml) and paste both outputs. The most useful details are:
    - which modules worked and which didn't,
    - MemAvailable after a day of running,
    - whether everything came back after a reboot,

@@ -119,7 +119,7 @@ Keep copies of startup scripts anywhere except `~/.termux/boot/`. The boot scrip
 
 **Fix:**
 
-- `checksum mismatch`: the download was corrupted or changed upstream. Run the same command again. If it keeps failing, [open an issue](https://github.com/JathinYanna04/resurrect/issues/new?template=bug.yml); never edit the checksum yourself.
+- `checksum mismatch`: the download was corrupted or changed upstream. Run the same command again. If it keeps failing, [open an issue](https://github.com/JathinYanna04/Resurrect/issues/new?template=bug.yml); never edit the checksum yourself.
 - Package installs fail: Termux from Google Play is outdated, so reinstall Termux from F-Droid or GitHub. Otherwise pick another mirror with `termux-change-repo` and run `pkg update`.
 - `<module> cannot be installed here: needs root` (or RAM, storage, architecture): the module doesn't fit this device. `rez modules` shows the reason for each module.
 
@@ -191,4 +191,4 @@ Password login is turned off on purpose.
 
 2. Add the output of `rez doctor` and the relevant log lines.
 3. **Remove passwords, tokens and addresses** from logs before posting.
-4. Open a [bug report](https://github.com/JathinYanna04/resurrect/issues/new?template=bug.yml).
+4. Open a [bug report](https://github.com/JathinYanna04/Resurrect/issues/new?template=bug.yml).

@@ -152,7 +152,7 @@ The Termux image runs on a normal Linux kernel, so these Android behaviours stay
 
 The single-device setup that resurrect generalizes did run on a real Android tablet for weeks, with Termux, proot `tailscaled`, AdGuard Home in root mode, Vaultwarden, ntfy and ACC. Its outages are where the reliability rules come from. The generic code still needs its own device testing.
 
-**If you run resurrect on a device, please send a [device report](https://github.com/JathinYanna04/resurrect/issues/new?template=device-report.yml).**
+**If you run resurrect on a device, please send a [device report](https://github.com/JathinYanna04/Resurrect/issues/new?template=device-report.yml).**
 
 ## Continuous integration
 

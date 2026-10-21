@@ -123,4 +123,4 @@ Routes are managed in the Cloudflare dashboard, not by resurrect. `rez uninstall
 | `tailscaled` keeps restarting | It crashed, often on inbound UDP | Check `rez logs tailscaled`, and send DNS to the device over TCP |
 | `cloudflared needs a tunnel token` | No token was given in non-interactive mode | Set `cloudflared.token_file`, or run `rez install cloudflared` interactively |
 
-The `tailscale` module has not been tested on a real device yet. If something here doesn't match what you see, please [open an issue](https://github.com/JathinYanna04/resurrect/issues/new?template=bug.yml).
+The `tailscale` module has not been tested on a real device yet. If something here doesn't match what you see, please [open an issue](https://github.com/JathinYanna04/Resurrect/issues/new?template=bug.yml).

@@ -4,9 +4,9 @@
 
 **Raise your dead phone as a homelab.**
 
-[![CI](https://github.com/JathinYanna04/resurrect/actions/workflows/ci.yml/badge.svg)](https://github.com/JathinYanna04/resurrect/actions/workflows/ci.yml)
+[![CI](https://github.com/JathinYanna04/Resurrect/actions/workflows/ci.yml/badge.svg)](https://github.com/JathinYanna04/Resurrect/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/JathinYanna04/resurrect?include_prereleases&label=release)](https://github.com/JathinYanna04/resurrect/releases)
+[![Latest release](https://img.shields.io/github/v/release/JathinYanna04/Resurrect?include_prereleases&label=release)](https://github.com/JathinYanna04/Resurrect/releases)
 [![Platform: Android / Termux](https://img.shields.io/badge/platform-Android%20%7C%20Termux-3ddc84)](#requirements)
 
 </div>
@@ -19,7 +19,7 @@
 resurrect turns an old Android phone or tablet (the *device* throughout these docs) into a small, private, self-hosted server using [Termux](https://termux.dev). One command sets up a password manager, ad blocking, file sharing, folder sync, push notifications, backups and LLM-filtered alerts. You reach them from anywhere over Tailscale, and nothing is exposed to the internet. Root is not needed.
 
 > [!NOTE]
-> resurrect is a **pre-release (0.1)**. It has been tested in the official Termux container, not yet on a range of real devices. [Tested status](#tested-status) lists exactly what has been verified, and a [device report](https://github.com/JathinYanna04/resurrect/issues/new?template=device-report.yml) from your device helps everyone.
+> resurrect is a **pre-release (0.1)**. It has been tested in the official Termux container, not yet on a range of real devices. [Tested status](#tested-status) lists exactly what has been verified, and a [device report](https://github.com/JathinYanna04/Resurrect/issues/new?template=device-report.yml) from your device helps everyone.
 
 ## Contents
 
@@ -96,7 +96,7 @@ Remote access uses a free [Tailscale](https://tailscale.com) account by default.
 Open Termux on the device and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/JathinYanna04/resurrect/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/JathinYanna04/Resurrect/main/install.sh | bash
 ```
 
 The script checks that it runs inside Termux, updates Termux packages, installs `git`, `curl`, `jq`, `dialog` and `util-linux`, clones resurrect into `~/.resurrect` and starts `rez setup`. Setup asks before it installs anything else. It never needs root, and it never flashes or reboots anything.
@@ -107,7 +107,7 @@ To read the installer before you run it:
 
 ```bash
 pkg install -y git
-git clone https://github.com/JathinYanna04/resurrect ~/.resurrect
+git clone https://github.com/JathinYanna04/Resurrect ~/.resurrect
 less ~/.resurrect/install.sh
 ~/.resurrect/install.sh
 ```
@@ -247,7 +247,7 @@ Read [docs/security.md](docs/security.md) for the exceptions and what is left to
 
 The full breakdown is in [docs/testing.md](docs/testing.md). Devices that have been reported are listed in [docs/tested-devices.md](docs/tested-devices.md).
 
-**Run resurrect on a device? Please send a report.** Run `rez device --report` (it contains no serial numbers or addresses) and paste the output into a [device report](https://github.com/JathinYanna04/resurrect/issues/new?template=device-report.yml).
+**Run resurrect on a device? Please send a report.** Run `rez device --report` (it contains no serial numbers or addresses) and paste the output into a [device report](https://github.com/JathinYanna04/Resurrect/issues/new?template=device-report.yml).
 
 ## Documentation
 

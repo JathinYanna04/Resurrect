@@ -155,7 +155,7 @@ The new device gets a fresh install with the same settings, then you put the dat
 
    ```bash
    pkg update -y && pkg install -y git
-   git clone https://github.com/JathinYanna04/resurrect ~/.resurrect
+   git clone https://github.com/JathinYanna04/Resurrect ~/.resurrect
    ```
 
 3. Copy the archive to the device. One way: give Termux storage access with `termux-setup-storage`, move the archive into the device's Downloads folder, then:

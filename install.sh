@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # resurrect bootstrap: raise your dead phone as a homelab.
 #
-#   curl -fsSL https://raw.githubusercontent.com/JathinYanna04/resurrect/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/JathinYanna04/Resurrect/main/install.sh | bash
 #   curl -fsSL .../install.sh | bash -s -- --profile lite --modules vaultwarden,ntfy --yes
 #
 # Or, if you would rather read it first (recommended):
-#   pkg install -y git && git clone https://github.com/JathinYanna04/resurrect ~/.resurrect
+#   pkg install -y git && git clone https://github.com/JathinYanna04/Resurrect ~/.resurrect
 #   less ~/.resurrect/install.sh && ~/.resurrect/install.sh
 #
 # What this script does, and nothing more:
@@ -19,7 +19,7 @@
 # halfway through runs nothing.
 main() {
   set -euo pipefail
-  local repo=${REZ_REPO:-https://github.com/JathinYanna04/resurrect}
+  local repo=${REZ_REPO:-https://github.com/JathinYanna04/Resurrect}
   local ref=${REZ_REF:-main}
   local dest=${REZ_HOME:-$HOME/.resurrect}
   local here=''
