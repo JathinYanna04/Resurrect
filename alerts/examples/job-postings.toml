@@ -1,0 +1,39 @@
+# Smart alert: new job postings that match what you are looking for.
+# Copy to ~/.config/resurrect/alerts/, edit, set enabled = true, then: rez alerts sync
+name = "job-postings"
+kind = "digest"
+enabled = false
+schedule = "0 */6 * * *"     # cron syntax: every 6 hours
+skip_backlog = true          # first run only remembers existing posts
+
+[[sources]]
+name = "We Work Remotely: programming"
+type = "rss"
+url = "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+
+[[sources]]
+name = "Remotive: software development"
+type = "json"
+url = "https://remotive.com/api/remote-jobs?category=software-dev&limit=50"
+items = "jobs"                         # where the list is in the JSON
+fields = { id = "id", title = "title", link = "url", text = "description" }
+exclude = ["senior staff", "10+ years"] # cheap keyword filter before the LLM
+
+[llm]
+# Any OpenAI-compatible endpoint. The key is read from api_key_file
+# (default ~/.config/resurrect/secrets/alerts_api_key) or api_key_env.
+base_url = "https://api.openai.com/v1"
+model = "gpt-4o-mini"
+min_score = 7
+prompt = """
+I am a junior backend developer (Python, Go, some Linux/DevOps).
+I want remote or hybrid roles open to early-career applicants.
+Score high: backend, platform, SRE, infrastructure, developer tooling.
+Score low: senior-only roles, sales, unpaid internships, crypto trading.
+"""
+
+[output]
+title = "Job match"
+priority = 3
+max_alerts = 5
+tags = "briefcase"

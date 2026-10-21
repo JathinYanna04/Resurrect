@@ -1,0 +1,4 @@
+#!/bin/sh
+# Last check before anything leaves this machine: files and full history.
+root=$(git rev-parse --show-toplevel)
+python3 "$root/scripts/privacy-scan.py" && python3 "$root/scripts/privacy-scan.py" --commits

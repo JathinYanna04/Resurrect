@@ -1,0 +1,32 @@
+# Smart alert: new research papers worth reading, from arXiv.
+name = "research-papers"
+kind = "digest"
+enabled = false
+schedule = "30 7 * * *"      # every morning at 07:30
+
+[[sources]]
+name = "arXiv cs.LG search"
+type = "atom"
+url = "https://export.arxiv.org/api/query?search_query=cat:cs.LG+AND+abs:%22on-device%22&sortBy=submittedDate&sortOrder=descending&max_results=40"
+
+[[sources]]
+name = "arXiv cs.CL new"
+type = "rss"
+url = "https://rss.arxiv.org/rss/cs.CL"
+max_items = 80
+
+[llm]
+base_url = "https://api.openai.com/v1"
+model = "gpt-4o-mini"
+min_score = 8
+prompt = """
+I follow efficient machine learning: small models, quantization, on-device
+inference, and evaluation methodology. Prefer papers with code or strong
+empirical results. Score surveys and position papers lower unless they are
+about these topics specifically.
+"""
+
+[output]
+title = "Paper"
+max_alerts = 4
+tags = "books"

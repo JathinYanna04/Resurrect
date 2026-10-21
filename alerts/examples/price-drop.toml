@@ -1,0 +1,23 @@
+# Smart alert: tell me when a product gets cheaper.
+# kind = "watch" tracks one value. A regex is used first (cheap, no API
+# call); if it finds nothing and [llm] exists, the LLM reads the page.
+name = "price-drop"
+kind = "watch"
+enabled = false
+schedule = "15 */4 * * *"
+
+[watch]
+url = "https://example.com/product/12345"     # the product page
+regex = 'Price[:\s]*[$€£₹]?\s*([\d.,]+)'       # first group = the number
+alert_when = "drop"          # drop | below | change
+min_drop_pct = 5             # for "drop"
+# target = 199.0             # for "below"
+
+[llm]
+base_url = "https://api.openai.com/v1"
+model = "gpt-4o-mini"
+prompt = "Find the current selling price of the main product (not shipping, not other offers)."
+
+[output]
+title = "Price drop"
+priority = 4

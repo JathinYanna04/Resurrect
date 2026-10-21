@@ -1,0 +1,11 @@
+# Never commit personal data. The privacy denylist lives in ~/.config/resurrect-dev/.
+*.local
+*.secret
+secrets/
+.env
+.env.*
+/tmp/
+/.cache/
+__pycache__/
+*.pyc
+tests/.tmp/

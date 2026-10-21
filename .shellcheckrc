@@ -1,0 +1,6 @@
+# Library files and modules are sourced into bin/rez, so they use globals
+# defined elsewhere (SC2154), set metadata read indirectly (SC2034), and
+# expose functions whose optional arguments callers may omit (SC2120).
+disable=SC2034,SC2154,SC2120
+external-sources=true
+source-path=SCRIPTDIR/..

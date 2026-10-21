@@ -1,0 +1,66 @@
+# resurrect answers file, for non-interactive installs:
+#   rez setup --config my.conf --yes
+# Every key is optional; anything left out uses the default shown.
+# Secrets are never put here: point *_file keys at files that hold them.
+# The file is parsed, not executed, so shell syntax does nothing.
+
+# --- Setup ------------------------------------------------------------------
+# profile=standard                 # lite | standard | full
+# setup.modules=base,tailscale,ntfy,vaultwarden,backup,monitor
+# setup.root=no                    # ask | yes | no
+
+# --- Network ------------------------------------------------------------------
+# net.bind=auto                    # auto | 127.0.0.1 | 0.0.0.0
+
+# --- base -------------------------------------------------------------------
+# base.ssh_pubkey_file=~/id_ed25519.pub   # copy your PUBLIC key to the phone first
+# base.move_boot_files=yes         # move other ~/.termux/boot files aside
+
+# --- tailscale --------------------------------------------------------------
+# tailscale.mode=proot             # proot | app
+# tailscale.hostname=resurrect
+# tailscale.authkey_file=~/tskey.txt  # one-time auth key; the file is read once
+
+# --- ntfy -------------------------------------------------------------------
+# ntfy.mode=local                  # local | external
+# ntfy.topic=alerts
+# ntfy.port=2586
+# ntfy.external_url=https://ntfy.sh   # for ntfy.mode=external
+
+# --- vaultwarden ------------------------------------------------------------
+# vaultwarden.https=tailscale      # tailscale | selfsigned
+# vaultwarden.port=8222
+
+# --- adguard ----------------------------------------------------------------
+# adguard.mode=noroot              # noroot | root (port 53, needs root)
+# adguard.dns_port=5335            # noroot mode
+# adguard.ui_port=3000
+
+# --- copyparty / filebrowser / syncthing --------------------------------------
+# copyparty.path=~/share
+# filebrowser.path=~/share
+# syncthing.gui_port=8384
+
+# --- backup -----------------------------------------------------------------
+# backup.keep=7
+# backup.dir=~/resurrect-backups
+# backup.expect_pull=yes           # alert if no computer pulled a copy for 3 days
+
+# --- monitor ----------------------------------------------------------------
+# monitor.interval=60
+# monitor.autorestart=yes
+# monitor.disk_max_pct=90
+# monitor.mem_min_mb=150
+# monitor.battery_max_c=45
+
+# --- alerts -----------------------------------------------------------------
+# alerts.api_key_file=~/llm-key.txt
+
+# --- jellyfin ---------------------------------------------------------------
+# media.path=/storage/XXXX-XXXX/Movies
+# jellyfin.autostart=no
+# jellyfin.heap_mb=300
+
+# --- acc (root) ---------------------------------------------------------------
+# acc.pause=80
+# acc.resume=70

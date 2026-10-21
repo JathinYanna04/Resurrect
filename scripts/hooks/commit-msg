@@ -1,0 +1,9 @@
+#!/bin/sh
+# Scan the commit message and author against the personal denylist and patterns.
+tmp=$(mktemp) || exit 1
+{ git var GIT_AUTHOR_IDENT; git var GIT_COMMITTER_IDENT; cat "$1"; } | sed 's/ [0-9]\{9,\} [+-][0-9]\{4\}$//' >"$tmp"
+python3 "$(git rev-parse --show-toplevel)/scripts/privacy-scan.py" "$tmp" >/dev/null
+rc=$?
+rm -f "$tmp"
+[ $rc -eq 0 ] || echo "commit-msg: commit message or author identity failed the privacy scan" >&2
+exit $rc

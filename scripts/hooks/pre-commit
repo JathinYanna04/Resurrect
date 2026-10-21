@@ -1,0 +1,3 @@
+#!/bin/sh
+# Enable with: git config core.hooksPath scripts/hooks
+exec python3 "$(git rev-parse --show-toplevel)/scripts/privacy-scan.py" --staged

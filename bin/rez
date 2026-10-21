@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+# rez: the resurrect command line. Run `rez help`.
+set -Eeuo pipefail
+
+REZ_ROOT=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
+export REZ_ROOT
+for _l in common config proc ui detect fetch proot cron notify modules; do
+  # shellcheck source=/dev/null
+  source "$REZ_ROOT/lib/$_l.sh"
+done
+unset _l
+
+usage() {
+  cat <<'EOF'
+rez — raise your dead phone as a homelab
+
+Usage: rez [global options] <command> [args]
+
+Setup
+  setup [--profile P] [--modules a,b] [--config FILE] [--root ask|yes|no]
+                          interactive installer (non-interactive with --yes)
+  install <module>...     install modules (and their dependencies)
+  uninstall <module>... [--purge]
+                          remove modules (--purge also deletes their data)
+
+Run
+  status                  every installed module, RAM and disk
+  start|stop|restart [module...]
+                          default: every installed module
+  logs [module]           follow a module's log (or rez's own)
+  doctor                  check the reliability rules and common problems
+
+Device
+  device [--report]       hardware, ROM, root, custom ROM options (read-only)
+
+Data
+  backup run|list|verify [FILE]|extract FILE DIR
+  alerts list|run JOB|test JOB|sync
+
+Modules
+  modules                 list modules and whether they fit this device
+  <module> <action> ...   module commands, e.g. `rez vaultwarden close-signups`
+
+Global options
+  --dry-run               print what would happen, change nothing
+  -y, --yes               answer yes to confirmations (non-interactive)
+  --non-interactive       never prompt; fail on missing answers
+  --debug                 verbose output
+  -h, --help              this help;  --version  print version
+EOF
+}
+
+# --- Global options ------------------------------------------------------------
+REZ_ARGS=()
+while (($#)); do
+  case "$1" in
+    --dry-run) REZ_DRY_RUN=1 ;;
+    -y | --yes) REZ_ASSUME_YES=1 REZ_NONINTERACTIVE=1 ;;
+    --non-interactive) REZ_NONINTERACTIVE=1 ;;
+    --debug) REZ_DEBUG=1 ;;
+    -h | --help) usage; exit 0 ;;
+    --version) echo "resurrect $REZ_VERSION"; exit 0 ;;
+    *) REZ_ARGS+=("$1") ;;
+  esac
+  shift
+done
+set -- "${REZ_ARGS[@]+"${REZ_ARGS[@]}"}"
+export REZ_DRY_RUN REZ_ASSUME_YES REZ_NONINTERACTIVE REZ_DEBUG
+
+trap 'err "failed at ${BASH_SOURCE[0]##*/}:$LINENO: $BASH_COMMAND"' ERR
+
+# REZ_HAS_ROOT is remembered from setup so later commands never re-prompt.
+[[ "$REZ_HAS_ROOT" == unknown ]] && REZ_HAS_ROOT=$(cfg_get device.root no)
+export REZ_HAS_ROOT
+
+_targets() {
+  if (($#)); then
+    local m
+    for m in "$@"; do module_exists "$m" || die "unknown module: $m"; echo "$m"; done
+  else
+    modules_enabled
+  fi
+}
+
+cmd_start() {
+  local m rc=0
+  for m in $(_targets "$@"); do
+    if [[ $# -eq 0 && "$(cfg_get "$m.autostart" yes)" == no ]]; then
+      debug "$m: autostart off"
+      continue
+    fi
+    module_call "$m" start || { err "$m failed to start"; rc=1; }
+  done
+  return $rc
+}
+
+cmd_stop() {
+  local m list rc=0
+  # Reverse order: dependents first.
+  list=$(_targets "$@" | tac)
+  for m in $list; do module_call "$m" stop || rc=1; done
+  return $rc
+}
+
+cmd_status() {
+  local m
+  printf 'resurrect %s   MemAvailable %s MB of %s MB   free %s MB in home\n\n' \
+    "$REZ_VERSION" "$(mem_available_mb)" "$(mem_total_mb)" "$(free_mb "$HOME")"
+  for m in $(modules_enabled); do
+    module_call "$m" status || true
+  done
+  [[ -n "$(modules_enabled)" ]] || echo "No modules installed yet. Run: rez setup"
+}
+
+cmd_install() {
+  local m list
+  (($#)) || die "usage: rez install <module>..."
+  rez_init_dirs
+  detect_all
+  list=$(modules_sorted "$(IFS=,; echo "$*")")
+  for m in $list; do
+    csv_has "$(cfg_get modules "")" "$m" && [[ " $* " != *" $m "* ]] && continue
+    setup_install_one "$m"
+  done
+  base_sync_boot_and_cron
+}
+
+cmd_uninstall() {
+  local purge=0 m a mods=()
+  for a in "$@"; do [[ "$a" == --purge ]] && purge=1 || mods+=("$a"); done
+  ((${#mods[@]})) || die "usage: rez uninstall <module>... [--purge]"
+  for m in "${mods[@]}"; do
+    module_exists "$m" || die "unknown module: $m"
+    if ui_yesno "Uninstall $m" "Stop and remove $m?$( ((purge)) && echo ' Its data will be DELETED.')" no; then
+      module_call "$m" stop || true
+      REZ_PURGE=$purge module_call "$m" uninstall
+      cfg_list_del modules "$m"
+      ok "$m removed"
+    fi
+  done
+  base_sync_boot_and_cron
+}
+
+cmd_logs() {
+  local f="$REZ_LOG_DIR/${1:-rez}.log"
+  [[ -f "$f" ]] || die "no log at $f"
+  tail -n 50 -F "$f"
+}
+
+cmd_modules() {
+  detect_all
+  local m why state
+  printf '%-12s %-9s %-9s %s\n' MODULE STATE ROOT DESCRIPTION
+  for m in "${REZ_MODULE_ORDER[@]}"; do
+    if csv_has "$(cfg_get modules "")" "$m"; then state=installed
+    elif why=$(module_ineligible "$m"); then state="n/a"
+    else state=available
+    fi
+    printf '%-12s %-9s %-9s %s%s\n' "$m" "$state" "$(module_meta "$m" ROOT)" "$(module_meta "$m" DESC)" \
+      "${why:+  [$why]}"
+    why=''
+  done
+}
+
+# rez boot: called by ~/.termux/boot/resurrect only.
+cmd_boot() {
+  rez_init_dirs
+  local log="$REZ_LOG_DIR/boot.log"
+  exec >>"$log" 2>&1
+  echo "$(date '+%F %T') boot: start"
+  # Only one copy at a time. Termux:Boot can fire twice, and someone may
+  # have left a copy of the boot script next to ours.
+  local rc=0
+  with_lock "$REZ_STATE_DIR/boot.lock" _boot_body || rc=$?
+  if ((rc == 75)); then echo "$(date '+%F %T') boot: another copy is running, exiting"; return 0; fi
+  echo "$(date '+%F %T') boot: done (rc $rc)"
+}
+
+_boot_body() {
+  date +%s >"$REZ_STATE_DIR/boot-time"
+  if have termux-wake-lock; then termux-wake-lock || true; fi
+  detect_termux
+  if [[ -n "$DEV_BOOT_EXTRA" ]]; then
+    echo "boot: other files in $REZ_BOOT_DIR also run at boot: $DEV_BOOT_EXTRA"
+    notify_send "Extra boot scripts found" "Termux:Boot runs every file in ~/.termux/boot. Besides resurrect: $DEV_BOOT_EXTRA. Move them to ~/.termux/boot-disabled/ unless you want them." 3 warning
+  fi
+  cmd_start || true
+}
+
+cmd_device() {
+  detect_all
+  if [[ "${1:-}" == --report ]]; then detect_report; return; fi
+  device_guide
+}
+
+cmd_cli() {
+  local m=$1; shift
+  module_has "$m" cli || die "$m has no extra commands"
+  module_call "$m" cli "$@"
+}
+
+for _l in setup device doctor; do
+  # shellcheck source=/dev/null
+  source "$REZ_ROOT/lib/$_l.sh"
+done
+unset _l
+
+main() {
+  local cmd=${1:-help}
+  (($#)) && shift
+  case "$cmd" in
+    help) usage ;;
+    setup) setup_main "$@" ;;
+    install) cmd_install "$@" ;;
+    uninstall | remove) cmd_uninstall "$@" ;;
+    status) cmd_status ;;
+    start) cmd_start "$@" ;;
+    stop) cmd_stop "$@" ;;
+    restart) cmd_stop "$@"; cmd_start "$@" ;;
+    logs) cmd_logs "$@" ;;
+    doctor) doctor_main "$@" ;;
+    device) cmd_device "$@" ;;
+    modules) cmd_modules ;;
+    boot) cmd_boot ;;
+    backup) module_call backup cli "$@" ;;
+    alerts) module_call alerts cli "$@" ;;
+    monitor) module_call monitor cli "$@" ;;
+    health) module_call monitor cli once ;;
+    cron) [[ "${1:-}" == sync ]] || die "usage: rez cron sync"; base_sync_boot_and_cron ;;
+    *)
+      if module_exists "$cmd"; then cmd_cli "$cmd" "$@"
+      else err "unknown command: $cmd"; usage >&2; exit 2
+      fi
+      ;;
+  esac
+}
+
+main "$@"
