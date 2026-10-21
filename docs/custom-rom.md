@@ -35,7 +35,7 @@ rez device
 The output starts with the device report and the bootloader state, then lists the options for your device:
 
 ```text
-resurrect 0.1.0 device report
+resurrect 0.1.1 device report
 Device:      <manufacturer> <model> (codename: <codename>)
 Android:     <version> (SDK <n>), patch <date>
 ROM:         stock (<build id>)

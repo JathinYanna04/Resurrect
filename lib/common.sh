@@ -5,7 +5,7 @@
 [[ -n "${_REZ_COMMON_LOADED:-}" ]] && return 0
 _REZ_COMMON_LOADED=1
 
-REZ_VERSION="0.1.0"
+REZ_VERSION="0.1.1"
 
 # --- Paths -------------------------------------------------------------------
 # Everything is overridable through the environment, which is how tests run

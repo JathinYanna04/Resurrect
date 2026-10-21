@@ -4,6 +4,10 @@ All notable changes to resurrect are recorded here. The format is based on [Keep
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-21
+
+Bug fixes found while verifying the documentation against the code, and a full documentation rewrite. Pinned upstream versions are unchanged from 0.1.0.
+
 ### Fixed
 
 - `rez stop`, `rez restart` and `rez uninstall` now stop every running copy of a service. Previously they stopped one, so a duplicate started by a second boot script survived and blocked the next start.
@@ -43,5 +47,6 @@ First public pre-release. Tested in the official Termux container, not yet on re
 | copyparty | 1.20.26 |
 | ACC | v2023.10.16 |
 
-[Unreleased]: https://github.com/JathinYanna04/resurrect/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/JathinYanna04/resurrect/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/JathinYanna04/resurrect/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/JathinYanna04/resurrect/releases/tag/v0.1.0

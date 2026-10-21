@@ -3,7 +3,7 @@
 This page lists real devices that people have run resurrect on, and how it went. It helps you judge whether your own device will work before you start. Every entry comes from a device report; nothing here is guessed from specifications.
 
 > [!NOTE]
-> **No device reports yet.** resurrect 0.1.0 has been tested in the official Termux container only (see [testing.md](testing.md)). Be the first: your report tells the next person whether their old device will work.
+> **No device reports yet.** resurrect 0.1.1 has been tested in the official Termux container only (see [testing.md](testing.md)). Be the first: your report tells the next person whether their old device will work.
 
 ## Reported devices
 
@@ -27,7 +27,7 @@ This page lists real devices that people have run resurrect on, and how it went.
    ```
 
    ```text
-   resurrect 0.1.0 device report
+   resurrect 0.1.1 device report
    Device:      <manufacturer> <model> (codename: <codename>)
    Android:     <version> (SDK <n>), patch <date>
    ROM:         stock (<build id>)
